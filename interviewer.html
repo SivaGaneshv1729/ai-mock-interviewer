@@ -679,6 +679,75 @@
                 font-size: 1.2rem;
             }
         }
+
+        /* Category Selection Styles */
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .category-tab {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .category-tab:hover {
+            color: var(--accent-primary);
+        }
+
+        .category-tab.active {
+            color: var(--accent-primary);
+        }
+
+        .category-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--accent-primary);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .domain-group {
+            display: none;
+        }
+
+        .domain-group.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .custom-btn {
+            background-color: var(--text-secondary);
+        }
+
+        .custom-btn:hover {
+            background-color: var(--text-primary);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -727,21 +796,46 @@
                 <div class="welcome-content">
                     <h2>Welcome to your Mock Interview</h2>
                     <p>I'll help you prepare for your next interview with realistic questions and feedback.</p>
-                    <p>Please select the domain you'd like to practice:</p>
-                    <div class="domain-selection">
-                        <button class="domain-btn" data-domain="software-engineering">Software Engineering</button>
-                        <button class="domain-btn" data-domain="data-science">Data Science</button>
-                        <button class="domain-btn" data-domain="product-management">Product Management</button>
-                        <button class="domain-btn" data-domain="marketing">Marketing</button>
-                        <button class="domain-btn" data-domain="sales">Sales</button>
-                        <button class="domain-btn" data-domain="finance">Finance</button>
-                        <button class="domain-btn" data-domain="hr">Human Resources</button>
-                        <button class="domain-btn" data-domain="custom">Custom Domain</button>
+
+                    <div class="category-tabs">
+                        <button class="category-tab active" data-target="technical-domains">Technical</button>
+                        <button class="category-tab" data-target="non-technical-domains">Non-Technical</button>
                     </div>
-                    <div id="custom-domain-input" class="hidden">
-                        <input type="text" id="custom-domain-field"
-                            placeholder="Enter your domain (e.g., Mechanical Engineering)">
-                        <button id="custom-domain-submit">Start Interview</button>
+
+                    <div id="technical-domains" class="domain-group active">
+                        <div class="domain-selection">
+                            <button class="domain-btn" data-domain="software-engineering">Software Engineering</button>
+                            <button class="domain-btn" data-domain="frontend">Frontend Developer</button>
+                            <button class="domain-btn" data-domain="backend">Backend Developer</button>
+                            <button class="domain-btn" data-domain="fullstack">Full-Stack Developer</button>
+                            <button class="domain-btn" data-domain="java-spring">Java & Spring Boot</button>
+                            <button class="domain-btn" data-domain="python">Python Developer</button>
+                            <button class="domain-btn" data-domain="data-science">Data Science / AIML</button>
+                            <button class="domain-btn" data-domain="lld">Low-Level Design (LLD)</button>
+                            <button class="domain-btn" data-domain="cad">CAD Design</button>
+                        </div>
+                    </div>
+
+                    <div id="non-technical-domains" class="domain-group">
+                        <div class="domain-selection">
+                            <button class="domain-btn" data-domain="hr">Human Resources (HR)</button>
+                            <button class="domain-btn" data-domain="product-management">Product Management</button>
+                            <button class="domain-btn" data-domain="marketing">Marketing</button>
+                            <button class="domain-btn" data-domain="sales">Sales</button>
+                            <button class="domain-btn" data-domain="finance">Finance</button>
+                        </div>
+                    </div>
+
+                    <div class="custom-domain-section">
+                        <p style="margin: 1.5rem 0 1rem 0; color: var(--text-secondary); font-size: 0.9rem;">Don't see
+                            your domain?</p>
+                        <button class="domain-btn custom-btn" data-domain="custom">Enter Custom Domain</button>
+
+                        <div id="custom-domain-input" class="hidden">
+                            <input type="text" id="custom-domain-field"
+                                placeholder="Enter your domain (e.g., Mechanical Engineering)">
+                            <button id="custom-domain-submit">Start Interview</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1028,6 +1122,28 @@
                 } else {
                     showToast('No question to clarify');
                 }
+            });
+
+            // Tab Switching Logic
+            const categoryTabs = document.querySelectorAll('.category-tab');
+            const domainGroups = document.querySelectorAll('.domain-group');
+
+            categoryTabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    // Remove active class from all tabs and groups
+                    categoryTabs.forEach(t => t.classList.remove('active'));
+                    domainGroups.forEach(g => g.classList.remove('active'));
+
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+
+                    // Show the corresponding domain group
+                    const targetId = this.getAttribute('data-target');
+                    document.getElementById(targetId).classList.add('active');
+
+                    // Hide custom domain input if it was open
+                    customDomainInput.classList.add('hidden');
+                });
             });
 
             // Helper function to update button visibility and state based on input content
