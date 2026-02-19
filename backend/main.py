@@ -5,8 +5,12 @@ from dotenv import load_dotenv
 import os
 from google import genai
 import markdown2
-from backend.prompts import INTERVIEW_PROMPT_BASE, FEEDBACK_PROMPT_BASE, CLARIFY_PROMPT_BASE, SUMMARY_PROMPT_BASE
-from backend.interview_manager import InterviewManager
+try:
+    from backend.prompts import INTERVIEW_PROMPT_BASE, FEEDBACK_PROMPT_BASE, CLARIFY_PROMPT_BASE, SUMMARY_PROMPT_BASE
+    from backend.interview_manager import InterviewManager
+except ImportError:
+    from prompts import INTERVIEW_PROMPT_BASE, FEEDBACK_PROMPT_BASE, CLARIFY_PROMPT_BASE, SUMMARY_PROMPT_BASE
+    from interview_manager import InterviewManager
 
 # Load environment variables
 load_dotenv()
