@@ -2,10 +2,6 @@ fastapi
 uvicorn
 python-dotenv
 pydantic
-pydantic[email]
-passlib[bcrypt]
-python-jose
-pymongo
-certifi
-google-genai
+groq
 markdown2
+google-genai
