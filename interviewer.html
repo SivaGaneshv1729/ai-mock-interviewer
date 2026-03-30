@@ -603,19 +603,12 @@
         /* Command buttons */
         .command-buttons {
             display: flex;
-            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
             justify-content: center;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
         }
 
         .command-btn {
-            padding: 0.4rem 0.8rem;
-            background-color: #333;
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
             font-size: 0.8rem;
             transition: background-color 0.2s;
         }
@@ -803,6 +796,49 @@
             color: var(--text-secondary);
             text-align: center;
         }
+
+        /* Resume Upload Styles */
+        .resume-upload-container {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .resume-upload-zone {
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .resume-upload-zone:hover, .resume-upload-zone.dragover {
+            border-color: var(--accent-primary);
+            background-color: rgba(21, 67, 206, 0.02);
+        }
+
+        .resume-upload-zone i {
+            font-size: 2.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .file-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -871,6 +907,24 @@
                     <div class="category-tabs">
                         <button class="category-tab active" data-target="technical-domains">Technical</button>
                         <button class="category-tab" data-target="non-technical-domains">Non-Technical</button>
+                        <button class="category-tab" data-target="resume-mode">Upload Resume</button>
+                    </div>
+
+                    <div id="resume-mode" class="domain-group">
+                        <div class="resume-upload-container">
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Upload your resume to get questions tailored to your experience.</p>
+                            <div class="resume-upload-zone" id="resume-drop-zone">
+                                <i class="fas fa-file-upload"></i>
+                                <p>Click or drag & drop your resume (PDF or DOCX)</p>
+                                <input type="file" id="resume-input" accept=".pdf,.docx" style="display: none;">
+                                <div id="selected-file-name" class="file-info hidden"></div>
+                            </div>
+                            <div id="resume-domain-container" class="hidden" style="width: 100%; max-width: 500px;">
+                                <input type="text" id="resume-domain-field" placeholder="Enter target role (e.g. Senior Frontend Engineer)" 
+                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1rem;">
+                                <button id="resume-start-btn" class="domain-btn" style="width: 100%; background: var(--accent-gradient);">Start Tailored Interview</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="technical-domains" class="domain-group active">
@@ -949,8 +1003,8 @@
                 </div>
             </div>
             <div class="command-buttons">
-                <button class="command-btn" id="repeat-btn">Repeat Question</button>
-                <button class="command-btn" id="clarify-btn">Ask for Clarification</button>
+                <button class="command-btn" id="repeat-btn"><i class="fas fa-redo"></i> Repeat Question</button>
+                <button class="command-btn" id="clarify-btn"><i class="fas fa-question-circle"></i> Ask for Clarification</button>
             </div>
             <div class="interview-controls">
                 <button id="end-interview-btn">End Interview</button>
@@ -1307,6 +1361,23 @@
                 }
             });
 
+            repeatBtn.addEventListener('click', function() {
+                if (lastQuestion) {
+                    addMessageToUI('interviewer', lastQuestion);
+                    speakText(lastQuestion);
+                } else {
+                    showToast('No question to repeat');
+                }
+            });
+
+            clarifyBtn.addEventListener('click', function() {
+                if (interviewInProgress) {
+                    requestClarification();
+                } else {
+                    showToast('Start an interview first');
+                }
+            });
+
             endInterviewBtn.addEventListener('click', endInterview);
 
             newInterviewBtn.addEventListener('click', function () {
@@ -1514,7 +1585,96 @@
             // Function to clean AI response (remove prefixes)
             function cleanAIResponse(rawResponse) {
                 // Remove potential prefixes like "text: ", "speech: ", etc.
-                return rawResponse.replace(/^(text|speech):\[\s\S\]*/i, '').trim();
+                return rawResponse.replace(/^(text|speech):\s*\[?/i, '').replace(/\]$/, '').trim();
+            }
+
+            // Resume Upload Logic
+            const dropZone = document.getElementById('resume-drop-zone');
+            const resumeInput = document.getElementById('resume-input');
+            const fileNameDisplay = document.getElementById('selected-file-name');
+            const resumeDomainContainer = document.getElementById('resume-domain-container');
+            const resumeStartBtn = document.getElementById('resume-start-btn');
+            let selectedFile = null;
+
+            dropZone.addEventListener('click', () => resumeInput.click());
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    handleFileSelection(e.dataTransfer.files[0]);
+                }
+            });
+
+            resumeInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelection(e.target.files[0]);
+                }
+            });
+
+            function handleFileSelection(file) {
+                selectedFile = file;
+                fileNameDisplay.textContent = `Selected: ${file.name}`;
+                fileNameDisplay.classList.remove('hidden');
+                resumeDomainContainer.classList.remove('hidden');
+            }
+
+            resumeStartBtn.addEventListener('click', () => {
+                const domain = document.getElementById('resume-domain-field').value || 'General';
+                startInterviewWithResume(domain, selectedFile);
+            });
+
+            async function startInterviewWithResume(domain, file) {
+                if (!file) return showToast('Please upload a resume first');
+                
+                currentDomain = domain;
+                interviewInProgress = true;
+                
+                welcomeScreen.classList.remove('active');
+                interviewScreen.classList.add('active');
+                inputContainer.classList.add('active');
+                
+                chatContainer.innerHTML = '';
+                addMessageToUI('system', `Analysing resume for ${domain} role...`);
+                
+                const formData = new FormData();
+                formData.append('domain', domain);
+                formData.append('resume', file);
+                formData.append('model_provider', currentProvider);
+
+                try {
+                    loadingIndicator.classList.add('active');
+                    const response = await fetch(`${serverUrl}/api/interview/start`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Failed to start interview');
+                    
+                    interviewContext = {
+                        sessionId: data.session_id,
+                        domain: domain,
+                        model_provider: currentProvider,
+                        lastUserResponse: ''
+                    };
+                    
+                    loadingIndicator.classList.remove('active');
+                    addMessageToUI('interviewer', data.reply);
+                    if (isSpeechEnabled) speakText(data.reply);
+                } catch (error) {
+                    loadingIndicator.classList.remove('active');
+                    console.error('CRITICAL: Failed to start interview:', error);
+                    showToast(`Error: ${error.message}`);
+                    addMessageToUI('system', `❌ Error starting interview: ${error.message}. Check your browser console (F12) for details.`);
+                }
             }
 
             async function requestNextQuestion() {
@@ -1528,15 +1688,14 @@
                     let body;
 
                     if (!interviewContext.sessionId) {
-                        // Start interview
-                        body = { 
-                            domain: currentDomain,
-                            model_provider: currentProvider
-                        };
+                        // Start interview using FormData (consistent with resume upload)
+                        const formData = new FormData();
+                        formData.append('domain', currentDomain);
+                        formData.append('model_provider', currentProvider);
+
                         response = await fetch(`${serverUrl}/api/interview/start`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(body),
+                            body: formData
                         });
                     } else {
                         // This function shouldn't strictly be used for "next question" after an answer
@@ -1569,7 +1728,12 @@
 
                 } catch (error) {
                     console.error('Error requesting next question:', error);
-                    addMessageToUI('system', 'Error requesting next question. Please try again.');
+                    let errMsg = error.message;
+                    if (error.message.includes('Failed to fetch')) {
+                        errMsg = "Cannot connect to AI server at " + serverUrl + ". Please ensure backend is running.";
+                    }
+                    addMessageToUI('system', `❌ Connection Error: ${errMsg}`);
+                    showToast('Server Connectivity Error');
                 } finally {
                     loadingIndicator.style.display = 'none';
                 }
