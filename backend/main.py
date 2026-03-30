@@ -32,10 +32,12 @@ try:
     from backend.prompts import INTERVIEW_PROMPT_BASE, FEEDBACK_PROMPT_BASE, CLARIFY_PROMPT_BASE, SUMMARY_PROMPT_BASE
     from backend.interview_manager import InterviewManager, format_session_context
     from backend.database import init_db, get_db, InterviewSessionModel
+    from backend.llm_clients import GroqClient, GeminiClient
 except ImportError:
     from prompts import INTERVIEW_PROMPT_BASE, FEEDBACK_PROMPT_BASE, CLARIFY_PROMPT_BASE, SUMMARY_PROMPT_BASE
     from interview_manager import InterviewManager, format_session_context
     from database import init_db, get_db, InterviewSessionModel
+    from llm_clients import GroqClient, GeminiClient
 
 def clean_key(key: str) -> str:
     """Robustly clean API keys."""
@@ -81,51 +83,8 @@ async def log_requests(request, call_next):
     logger.info(f"Response status: {response.status_code}")
     return response
 
-def clean_ai_response(text: str) -> str:
-    import re
-    cleaned = re.sub(r'^(text|speech):\s*\[?', '', text, flags=re.IGNORECASE)
-    cleaned = re.sub(r'\]$', '', cleaned)
-    return cleaned.strip()
-
-async def fetch_groq_completion(session: aiohttp.ClientSession, prompt: str, api_key: str) -> str:
-    url = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": settings.groq_model,
-        "messages": [{"role": "user", "content": prompt}]
-    }
-    
-    async with session.post(url, headers=headers, json=payload) as response:
-        if response.status != 200:
-            text = await response.text()
-            raise Exception(f"Groq API Error {response.status}: {text}")
-        data = await response.json()
-        return data["choices"][0]["message"]["content"]
-
-async def fetch_gemini_completion(session: aiohttp.ClientSession, prompt: str, api_key: str) -> str:
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_model}:generateContent?key={api_key}"
-    headers = {
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}]
-    }
-    
-    async with session.post(url, headers=headers, json=payload) as response:
-        if response.status != 200:
-            text = await response.text()
-            raise Exception(f"Gemini API Error {response.status}: {text}")
-        data = await response.json()
-        try:
-            return data["candidates"][0]["content"]["parts"][0]["text"]
-        except (KeyError, IndexError) as e:
-            raise Exception(f"Unexpected response format from Gemini: {data}")
-
 async def call_llm(prompt: str, provider: str) -> str:
-    logger.info(f"LLM Call Request [RAW-HTTP] -> {provider}")
+    logger.info(f"LLM Call Request [LLM-CLIENTS] -> {provider}")
     
     # Strict 15 second timeout for connection and reading
     timeout = aiohttp.ClientTimeout(total=15)
@@ -134,23 +93,27 @@ async def call_llm(prompt: str, provider: str) -> str:
         async with aiohttp.ClientSession(timeout=timeout) as session:
             if provider == "groq":
                 if not settings.groq_api_key1: raise Exception("Groq primary key not configured.")
+                
+                client1 = GroqClient(settings.groq_api_key1, settings.groq_model)
                 try:
-                    res = await fetch_groq_completion(session, prompt, settings.groq_api_key1)
+                    res = await client1.get_completion(session, prompt)
                     logger.info("Groq primary call successful.")
-                    return clean_ai_response(res)
+                    return res
                 except Exception as e:
                     logger.warning(f"Groq primary failed: {e}")
                     if settings.groq_api_key2:
-                        res = await fetch_groq_completion(session, prompt, settings.groq_api_key2)
+                        client2 = GroqClient(settings.groq_api_key2, settings.groq_model)
+                        res = await client2.get_completion(session, prompt)
                         logger.info("Groq fallback call successful.")
-                        return clean_ai_response(res)
+                        return res
                     raise
             
             elif provider == "gemini":
                 if not settings.gemini_api_key1: raise Exception("Gemini key not configured.")
-                res = await fetch_gemini_completion(session, prompt, settings.gemini_api_key1)
+                client = GeminiClient(settings.gemini_api_key1, settings.gemini_model)
+                res = await client.get_completion(session, prompt)
                 logger.info("Gemini call successful.")
-                return clean_ai_response(res)
+                return res
                 
             raise Exception(f"Unknown provider: {provider}")
 
