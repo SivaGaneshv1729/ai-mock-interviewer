@@ -748,6 +748,61 @@
                 transform: translateY(0);
             }
         }
+
+        /* Provider Selection Styles */
+        .provider-selection {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .provider-card {
+            flex: 1;
+            max-width: 200px;
+            padding: 1.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            background-color: white;
+        }
+
+        .provider-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .provider-card.active {
+            border-color: var(--accent-primary);
+            background-color: rgba(21, 67, 206, 0.05);
+            box-shadow: 0 4px 12px rgba(21, 67, 206, 0.15);
+        }
+
+        .provider-icon {
+            font-size: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .active .provider-icon {
+            color: var(--accent-primary);
+        }
+
+        .provider-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .provider-model {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -796,6 +851,22 @@
                 <div class="welcome-content">
                     <h2>Welcome to your Mock Interview</h2>
                     <p>I'll help you prepare for your next interview with realistic questions and feedback.</p>
+
+                    <div style="margin-top: 2rem;">
+                        <p style="font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">Choose AI Provider</p>
+                        <div class="provider-selection">
+                            <div class="provider-card active" data-provider="groq">
+                                <div class="provider-icon"><i class="fas fa-bolt"></i></div>
+                                <div class="provider-name">Groq</div>
+                                <div class="provider-model">Ultra-fast Llama 3.3</div>
+                            </div>
+                            <div class="provider-card" data-provider="gemini">
+                                <div class="provider-icon"><i class="fas fa-brain"></i></div>
+                                <div class="provider-name">Gemini</div>
+                                <div class="provider-model">Advanced Google AI</div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="category-tabs">
                         <button class="category-tab active" data-target="technical-domains">Technical</button>
@@ -919,6 +990,7 @@
 
             // State variables
             let currentDomain = '';
+            let currentProvider = 'groq';
             let interviewInProgress = false;
             let isRecording = false;
             let recognition = null;
@@ -1124,6 +1196,16 @@
                 }
             });
 
+            // Provider Selection Logic
+            const providerCards = document.querySelectorAll('.provider-card');
+            providerCards.forEach(card => {
+                card.addEventListener('click', function () {
+                    providerCards.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    currentProvider = this.dataset.provider;
+                });
+            });
+
             // Tab Switching Logic
             const categoryTabs = document.querySelectorAll('.category-tab');
             const domainGroups = document.querySelectorAll('.domain-group');
@@ -1263,6 +1345,7 @@
                 interviewContext = {
                     sessionId: '', // New session ID from backend
                     domain: domain,
+                    model_provider: currentProvider,
                     lastUserResponse: ''
                 };
 
@@ -1273,7 +1356,8 @@
                 chatContainer.innerHTML = '';
 
                 // Add system message
-                addMessageToUI('system', `Starting interview in ${domain} (Basic questions phase)`);
+                const providerName = currentProvider.charAt(0).toUpperCase() + currentProvider.slice(1);
+                addMessageToUI('system', `Starting ${providerName} interview in ${domain}`);
 
                 // Request first question
                 requestNextQuestion();
@@ -1445,7 +1529,10 @@
 
                     if (!interviewContext.sessionId) {
                         // Start interview
-                        body = { domain: currentDomain };
+                        body = { 
+                            domain: currentDomain,
+                            model_provider: currentProvider
+                        };
                         response = await fetch(`${serverUrl}/api/interview/start`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
