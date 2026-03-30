@@ -1,2 +1,16 @@
-backend/.env
-backend/__pycache__/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.env
+
+# Project specific
+backend/.data/
+*.db
+*.log
+.DS_Store
+node_modules/
+dist/

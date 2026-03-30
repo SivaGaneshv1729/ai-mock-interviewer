@@ -2,6 +2,13 @@ fastapi
 uvicorn
 python-dotenv
 pydantic
+pydantic-settings
 groq
-markdown2
 google-genai
+markdown2
+sqlalchemy[asyncio]
+aiosqlite
+PyPDF2
+python-docx
+loguru
+python-multipart
