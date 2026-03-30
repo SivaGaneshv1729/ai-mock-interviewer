@@ -6,9 +6,10 @@ from pydantic import BaseModel
 sessions: Dict[str, "InterviewSession"] = {}
 
 class InterviewSession:
-    def __init__(self, domain: str):
+    def __init__(self, domain: str, model_provider: str = "groq"):
         self.session_id = str(uuid.uuid4())
         self.domain = domain
+        self.model_provider = model_provider
         self.questions: List[str] = []
         self.answers: List[str] = []
         self.feedback: List[str] = []
@@ -20,6 +21,7 @@ class InterviewSession:
         return {
             "session_id": self.session_id,
             "domain": self.domain,
+            "model_provider": self.model_provider,
             "questions": self.questions,
             "answers": self.answers,
             "feedback": self.feedback,
@@ -56,8 +58,8 @@ class InterviewSession:
 
 class InterviewManager:
     @staticmethod
-    def create_session(domain: str) -> InterviewSession:
-        session = InterviewSession(domain)
+    def create_session(domain: str, model_provider: str = "groq") -> InterviewSession:
+        session = InterviewSession(domain, model_provider)
         sessions[session.session_id] = session
         return session
 
