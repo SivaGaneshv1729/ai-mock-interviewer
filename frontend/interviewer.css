@@ -255,6 +255,50 @@ body {
 .msg-row.user { align-self: flex-end; }
 .msg-row.user .msg-text { background: var(--primary-gradient); color: #fff; border-bottom-right-radius: 2px; text-align: right; }
 .msg-row.user .msg-meta { align-self: flex-end; }
+ 
+ /* Chat Input Area */
+ .chat-input-area {
+   padding: 1rem;
+   border-top: 1px solid var(--border);
+   display: flex;
+   gap: 0.75rem;
+   background: #fff;
+ }
+ #chat-input {
+   flex: 1;
+   padding: 0.75rem 1.25rem;
+   border-radius: var(--radius-sm);
+   border: 1.5px solid var(--border);
+   font-family: var(--font-main);
+   font-size: 0.95rem;
+   transition: var(--transition);
+   background: #f8faff;
+ }
+ #chat-input:focus {
+   outline: none;
+   border-color: var(--primary);
+   background: #fff;
+   box-shadow: 0 0 0 3px rgba(42, 140, 244, 0.1);
+ }
+ #chat-send-btn {
+   width: 42px;
+   height: 42px;
+   border-radius: var(--radius-sm);
+   border: none;
+   background: var(--primary-gradient);
+   color: #fff;
+   cursor: pointer;
+   transition: var(--transition);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   flex-shrink: 0;
+ }
+ #chat-send-btn:hover {
+   transform: scale(1.05);
+   filter: brightness(1.1);
+   box-shadow: var(--shadow-glow);
+ }
 
 /* Controls Overlay (Floating) */
 .controls-overlay {

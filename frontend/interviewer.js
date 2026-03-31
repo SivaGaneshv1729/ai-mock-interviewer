@@ -526,6 +526,28 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(false);
   };
 
+  const handleChatSend = () => {
+    const input = $('chat-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (text && state.sessionId) {
+      sendAnswer(text);
+      input.value = '';
+    }
+  };
+
+  const chatSendBtn = $('chat-send-btn');
+  if (chatSendBtn) {
+    chatSendBtn.onclick = handleChatSend;
+  }
+  
+  const chatInput = $('chat-input');
+  if (chatInput) {
+    chatInput.onkeypress = (e) => {
+      if (e.key === 'Enter') handleChatSend();
+    };
+  }
+
   let camOn = true;
   $('cam-toggle').onclick = () => {
     camOn = !camOn;
