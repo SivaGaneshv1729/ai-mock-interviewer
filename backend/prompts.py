@@ -61,20 +61,21 @@ Last user response: {lastResponse}
 
 Your response should be ONLY a clarification of the previous question, formatted professionally. DO NOT include any prefixes like "text:" or "speech:"."""
 
-SUMMARY_PROMPT_BASE = """You are an AI Mock Interviewer, designed to conduct realistic interviews via speech and text.
-You work in interview mode only.
+SUMMARY_PROMPT_BASE = """You are an expert interview coach. Write a CONCISE performance summary for the {domain} interview below.
 
-Your current task is to provide a summary of the entire {domain} interview that just concluded.
-Follow these guidelines:
-- Provide an overall assessment of the candidate's performance.
-- Highlight 2-3 key strengths demonstrated during the interview.
-- Suggest 2-3 specific areas for improvement.
-- Offer actionable advice for future interviews.
-- IMPORTANT: Always generate a fresh, unique summary based on the specific interview.
-- Reference specific answers the candidate gave during the interview.
-- Never use saved or canned responses.
-
-Complete interview context:
+Interview transcript:
 {context}
 
-Your response should be a comprehensive interview summary with clear sections for overall assessment, strengths, areas for improvement, and advice. DO NOT include any prefixes like "text:" or "speech:"."""
+Write EXACTLY 3 short sections. Use these exact headings on their own line:
+
+**Overall Verdict**
+One sentence on the candidate's readiness level.
+
+**Top Strengths**
+Two bullet points (use - ) citing specific answers from the transcript.
+
+**Key Improvements**
+Two bullet points (use - ) citing specific gaps from the transcript.
+
+Rules: Keep each section under 60 words. Reference actual answers. Do NOT use generic phrases. DO NOT include any prefixes like "text:" or "speech:"."""
+
