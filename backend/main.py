@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     port: int = int(os.getenv("PORT", "8000"))
 
 
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
 settings = Settings()
 
 # Logger setup
@@ -80,9 +83,27 @@ app = FastAPI(title="AI Mock Interviewer Pro")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False,
                    allow_methods=["*"], allow_headers=["*"])
 
+# Serve frontend files
+# The project root is one level up from the 'backend' directory
+project_root = os.path.dirname(current_dir)
+
+@app.get("/")
+async def read_index():
+    return FileResponse(os.path.join(project_root, "interviewer.html"))
+
+    return FileResponse(os.path.join(project_root, "interviewer.html"))
+
 
 @app.middleware("http")
 async def log_requests(request, call_next):
+    # ... (rest of middleware stays same)
+    response = await call_next(request)
+    return response
+
+
+# ── Interview Endpoints (rest of them here) ──
+
+# ... (I'll just move the mount to the very end of the file in the full tool call)
     logger.info(f"► {request.method} {request.url.path}")
     response = await call_next(request)
     logger.info(f"◄ {response.status_code}")
@@ -205,6 +226,7 @@ async def start(domain: str = Form(...), model_provider: str = Form("groq"), res
 class SessionReq(BaseModel):
     session_id: str
     answer: str = ""
+    security_log: list = []   # cheat/face detection events from camera module
 
 
 @app.post("/api/interview/answer")
@@ -286,11 +308,12 @@ async def end(req: SessionReq):
                  "strengths": ["Completed the interview"], "improvements": ["Keep practising"]}
 
     # Persist — mark completed (not delete)
-    await InterviewManager.complete_session(req.session_id, summary_html, score)
+    await InterviewManager.complete_session(req.session_id, summary_html, score, req.security_log)
 
     return {
         "reply": summary_html,
         "score": score,
+        "security_log": req.security_log,
         "session_id": req.session_id
     }
 
@@ -330,9 +353,24 @@ async def get_session_detail(session_id: str):
         "feedback": session.feedback,
         "score": session.score,
         "summary": session.summary,
+        "security_log": session.security_log or [],
         "ended_at": session.ended_at.isoformat() if session.ended_at else None,
         "created_at": session.created_at.isoformat() if session.created_at else None,
     }
+
+
+# ── Frontend Static Serving (Must be last) ──
+@app.get("/")
+async def read_index():
+    return FileResponse(os.path.join(project_root, "interviewer.html"))
+
+
+@app.get("/interviewer_app")
+async def read_interviewer_app():
+    return FileResponse(os.path.join(project_root, "interviewer.html"))
+
+
+app.mount("/", StaticFiles(directory=project_root), name="static")
 
 
 if __name__ == "__main__":
