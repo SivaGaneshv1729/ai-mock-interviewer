@@ -1,1888 +1,352 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Mock Interviewer</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        :root {
-            --bg-primary: #ffffff;
-            /* Main background */
-            --bg-secondary: #f5f5f5;
-            /* Secondary background */
-            --bg-tertiary: #eaeaea;
-            /* Chat bubbles or tertiary areas */
-            --text-primary: #1a1a1a;
-            /* Main text color */
-            --text-secondary: #555555;
-            /* Secondary text */
-            --accent-primary: #1543ce;
-            /* Primary accent (e.g., buttons) */
-            --accent-secondary: #2409bb;
-            /* Secondary accent (e.g., hover or action) */
-            --border-color: #cccccc;
-            /* Border and outlines */
-            --font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            --border-radius: 8px;
-            --header-height: 60px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-        }
-
-        header {
-            height: var(--header-height);
-            padding: 0 1.5rem;
-            background: linear-gradient(to right,
-                    #0d2b8c 0%,
-                    /* Darker Blue */
-                    #1543ce 20%,
-                    /* Base Blue #1543ce */
-                    #000000 40%,
-                    /* Black Center Start */
-                    #000000 60%,
-                    /* Black Center End */
-                    #1543ce 80%,
-                    /* Base Blue #1543ce */
-                    #0d2b8c 100%
-                    /* Darker Blue */
-                );
-            margin-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .header-left {
-            width: 200px;
-        }
-
-        .header-center {
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .header-right {
-            width: 200px;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        /* Settings Dropdown */
-        .settings-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .settings-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 5px 10px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .settings-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            background-color: white;
-            min-width: 250px;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            border-radius: var(--border-radius);
-            padding: 15px;
-            color: var(--text-primary);
-        }
-
-        .settings-dropdown:hover .settings-content {
-            display: block;
-        }
-
-        .settings-section {
-            margin-bottom: 15px;
-        }
-
-        .settings-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .settings-section h3 {
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-        }
-
-        /* Speech Toggle */
-        .speech-toggle {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 10px;
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 20px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 20px;
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.toggle-slider {
-            background-color: #4CAF50;
-        }
-
-        input:checked+.toggle-slider:before {
-            transform: translateX(20px);
-        }
-
-        /* Voice settings */
-        .voice-settings {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        #voice-select {
-            padding: 0.5rem;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background-color: white;
-            font-size: 0.9rem;
-            width: 100%;
-        }
-
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Screen Management */
-        .screen {
-            display: none;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-        }
-
-        .screen.active {
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Welcome Screen */
-        .welcome-content {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: var(--bg-secondary);
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .welcome-content h2 {
-            margin-bottom: 1rem;
-            color: var(--accent-primary);
-        }
-
-        .welcome-content p {
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-        }
-
-        .domain-selection {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .domain-btn {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--accent-primary);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.2s;
-        }
-
-        .domain-btn:hover {
-            background-color: var(--accent-secondary);
-        }
-
-        #custom-domain-input {
-            margin-top: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        #custom-domain-input.hidden {
-            display: none;
-        }
-
-        #custom-domain-field {
-            padding: 0.75rem;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-        }
-
-        #custom-domain-submit {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--accent-primary);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.2s;
-        }
-
-        #custom-domain-submit:hover {
-            background-color: var(--accent-secondary);
-        }
-
-        /* Interview Screen */
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .chat-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .chat-container::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-        }
-
-        .chat-container::-webkit-scrollbar-thumb {
-            background-color: var(--accent-primary);
-            border-radius: var(--border-radius);
-            border: 2px solid var(--bg-secondary);
-        }
-
-        .message {
-            max-width: 75%;
-            padding: 0.75rem 1rem;
-            border-radius: var(--border-radius);
-            line-height: 1.5;
-            word-wrap: break-word;
-            position: relative;
-        }
-
-        .user {
-            align-self: flex-end;
-            background-color: var(--accent-primary);
-            color: #FFFFFF;
-            border-bottom-right-radius: 0;
-        }
-
-        .interviewer {
-            align-self: flex-start;
-            background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-            border-bottom-left-radius: 0;
-        }
-
-        .feedback {
-            align-self: flex-start;
-            background-color: #4CAF50;
-            /* Green for feedback */
-            color: white;
-            border-bottom-left-radius: 0;
-            border-left: 4px solid #2E7D32;
-            /* Darker green border */
-        }
-
-        .system {
-            align-self: center;
-            background-color: #f0f0f0;
-            color: #666;
-            font-style: italic;
-            max-width: 90%;
-            text-align: center;
-            padding: 0.5rem 1rem;
-        }
-
-        .loading-indicator {
-            display: none;
-            align-self: flex-start;
-            margin-left: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .loading-indicator span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            margin-right: 4px;
-            border-radius: 50%;
-            background-color: var(--text-secondary);
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-
-        .loading-indicator span:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .loading-indicator span:nth-child(2) {
-            animation-delay: -0.16s;
-        }
-
-        @keyframes bounce {
-
-            0%,
-            80%,
-            100% {
-                transform: scale(0);
-            }
-
-            40% {
-                transform: scale(1.0);
-            }
-        }
-
-        /* Input Container */
-        .input-container {
-            display: flex;
-            flex-direction: column;
-            padding: 1rem 1.5rem;
-            background-color: rgb(255, 255, 255);
-            border-top: 1px solid white;
-            width: 100%;
-            position: relative;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-
-        .input-wrapper {
-            position: relative;
-            background-color: white;
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            padding: 8px 16px;
-            min-height: 50px;
-            display: flex;
-            align-items: flex-end;
-            padding-bottom: 8px;
-        }
-
-        #user-input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            padding: 8px 0;
-            font-family: var(--font-family);
-            font-size: 1rem;
-            resize: none;
-            outline: none;
-            max-height: calc(1.5em * 10);
-            min-height: calc(1.5em * 1);
-            overflow-y: auto;
-            line-height: 1.5em;
-            align-self: stretch;
-            margin-right: 8px;
-        }
-
-        .input-buttons {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: auto;
-            padding-bottom: 4px;
-        }
-
-        .input-button {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 8px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-        }
-
-        .input-button:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        #mic-button {
-            color: var(--text-secondary);
-        }
-
-        #mic-button.recording {
-            color: #ff4d4d;
-        }
-
-        #send-button {
-            color: var(--accent-primary);
-        }
-
-        #send-button:disabled {
-            color: var(--text-secondary);
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        #feedback-button {
-            color: #4CAF50;
-        }
-
-        #feedback-button.mic-mode {
-            color: var(--text-secondary);
-        }
-
-        #feedback-button.mic-mode.recording {
-            color: #ff4d4d;
-        }
-
-        .interview-controls {
-            display: flex;
-            justify-content: center;
-            margin-top: 1rem;
-        }
-
-        #end-interview-btn {
-            padding: 0.5rem 1rem;
-            background-color: #f44336;
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background-color 0.2s;
-        }
-
-        #end-interview-btn:hover {
-            background-color: #d32f2f;
-        }
-
-        /* Summary Screen */
-        .summary-content {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: var(--bg-secondary);
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .summary-content h2 {
-            margin-bottom: 1.5rem;
-            color: var(--accent-primary);
-            text-align: center;
-        }
-
-        #summary-container {
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .summary-actions {
-            display: flex;
-            justify-content: center;
-        }
-
-        #new-interview-btn {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--accent-primary);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.2s;
-        }
-
-        #new-interview-btn:hover {
-            background-color: var(--accent-secondary);
-        }
-
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 4px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        /* Command buttons */
-        .command-buttons {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 1rem;
-            justify-content: center;
-        }
-
-        .command-btn {
-            font-size: 0.8rem;
-            transition: background-color 0.2s;
-        }
-
-        .command-btn:hover {
-            background-color: #555;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-
-            .welcome-content,
-            .summary-content {
-                margin: 1rem;
-                padding: 1.5rem;
-            }
-
-            .domain-selection {
-                gap: 0.5rem;
-            }
-
-            .domain-btn {
-                padding: 0.6rem 1rem;
-                font-size: 0.9rem;
-            }
-
-            .message {
-                max-width: 85%;
-            }
-
-            .input-container {
-                padding: 0.75rem 1rem;
-            }
-
-            .header-left,
-            .header-right {
-                width: auto;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .domain-btn {
-                padding: 0.5rem 0.75rem;
-                font-size: 0.85rem;
-            }
-
-            .message {
-                max-width: 90%;
-            }
-
-            .input-buttons {
-                gap: 4px;
-            }
-
-            .input-button {
-                font-size: 1rem;
-                padding: 6px;
-            }
-
-            .header-center h1 {
-                font-size: 1.2rem;
-            }
-        }
-
-        /* Category Selection Styles */
-        .category-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin: 1.5rem 0;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .category-tab {
-            background: none;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            position: relative;
-            transition: color 0.2s;
-        }
-
-        .category-tab:hover {
-            color: var(--accent-primary);
-        }
-
-        .category-tab.active {
-            color: var(--accent-primary);
-        }
-
-        .category-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: var(--accent-primary);
-            border-radius: 3px 3px 0 0;
-        }
-
-        .domain-group {
-            display: none;
-        }
-
-        .domain-group.active {
-            display: block;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .custom-btn {
-            background-color: var(--text-secondary);
-        }
-
-        .custom-btn:hover {
-            background-color: var(--text-primary);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Provider Selection Styles */
-        .provider-selection {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            margin: 1.5rem 0;
-        }
-
-        .provider-card {
-            flex: 1;
-            max-width: 200px;
-            padding: 1.5rem;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.75rem;
-            background-color: white;
-        }
-
-        .provider-card:hover {
-            border-color: var(--accent-primary);
-            transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .provider-card.active {
-            border-color: var(--accent-primary);
-            background-color: rgba(21, 67, 206, 0.05);
-            box-shadow: 0 4px 12px rgba(21, 67, 206, 0.15);
-        }
-
-        .provider-icon {
-            font-size: 2rem;
-            color: var(--text-secondary);
-        }
-
-        .active .provider-icon {
-            color: var(--accent-primary);
-        }
-
-        .provider-name {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .provider-model {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-
-        /* Resume Upload Styles */
-        .resume-upload-container {
-            margin-top: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .resume-upload-zone {
-            width: 100%;
-            max-width: 500px;
-            padding: 2rem;
-            border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .resume-upload-zone:hover, .resume-upload-zone.dragover {
-            border-color: var(--accent-primary);
-            background-color: rgba(21, 67, 206, 0.02);
-        }
-
-        .resume-upload-zone i {
-            font-size: 2.5rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-        }
-
-        .file-info {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: var(--accent-primary);
-            font-weight: 600;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Mock Interviewer Pro</title>
+  <meta name="description" content="Practice job interviews with AI-powered real-time feedback and performance analytics.">
+  <meta property="og:title" content="AI Mock Interviewer Pro">
+  <meta property="og:description" content="AI-powered mock interviews with real-time scoring and analytics.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="interviewer.css">
 </head>
-
 <body>
-    <div class="app-container" id="app-container">
-        <!-- Header -->
-        <header>
-            <div class="header-left">
-                <!-- Left side of header (empty for now) -->
-            </div>
-            <div class="header-center">
-                <img id="header-logo-title" src="../logos/interviewerheader.png" alt="AI Interviewer"
-                    style="height: 55px;"> <!-- Placeholder for logo/title image -->
-            </div>
-            <div class="header-right">
-                <div class="settings-dropdown">
-                    <button class="settings-btn">
-                        <i class="fas fa-cog"></i> <!-- Removed " Settings" text -->
-                    </button>
-                    <div class="settings-content">
-                        <div class="settings-section">
-                            <h3>Speech Options</h3>
-                            <div class="speech-toggle">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="speech-toggle" checked>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <span>Text-to-Speech</span>
-                            </div>
-                        </div>
-                        <div class="settings-section">
-                            <h3>Voice Selection</h3>
-                            <div class="voice-settings">
-                                <select id="voice-select"></select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
+<div class="app">
 
-        <!-- Main Content -->
-        <main>
-            <!-- Welcome Screen (shown first) -->
-            <div id="welcome-screen" class="screen active">
-                <div class="welcome-content">
-                    <h2>Welcome to your Mock Interview</h2>
-                    <p>I'll help you prepare for your next interview with realistic questions and feedback.</p>
+  <!-- ═══ HEADER ═══ -->
+  <header>
+    <a class="header-brand" href="#">
+      <div class="brand-icon"><i class="fas fa-brain"></i></div>
+      InterviewAI Pro
+    </a>
 
-                    <div style="margin-top: 2rem;">
-                        <p style="font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">Choose AI Provider</p>
-                        <div class="provider-selection">
-                            <div class="provider-card active" data-provider="groq">
-                                <div class="provider-icon"><i class="fas fa-bolt"></i></div>
-                                <div class="provider-name">Groq</div>
-                                <div class="provider-model">Ultra-fast Llama 3.3</div>
-                            </div>
-                            <div class="provider-card" data-provider="gemini">
-                                <div class="provider-icon"><i class="fas fa-brain"></i></div>
-                                <div class="provider-name">Gemini</div>
-                                <div class="provider-model">Advanced Google AI</div>
-                            </div>
-                        </div>
-                    </div>
+    <nav class="header-nav">
+      <button class="nav-btn active" data-screen="welcome">
+        <i class="fas fa-home"></i> Home
+      </button>
+      <button class="nav-btn" data-screen="history">
+        <i class="fas fa-history"></i> History
+      </button>
+    </nav>
 
-                    <div class="category-tabs">
-                        <button class="category-tab active" data-target="technical-domains">Technical</button>
-                        <button class="category-tab" data-target="non-technical-domains">Non-Technical</button>
-                        <button class="category-tab" data-target="resume-mode">Upload Resume</button>
-                    </div>
-
-                    <div id="resume-mode" class="domain-group">
-                        <div class="resume-upload-container">
-                            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Upload your resume to get questions tailored to your experience.</p>
-                            <div class="resume-upload-zone" id="resume-drop-zone">
-                                <i class="fas fa-file-upload"></i>
-                                <p>Click or drag & drop your resume (PDF or DOCX)</p>
-                                <input type="file" id="resume-input" accept=".pdf,.docx" style="display: none;">
-                                <div id="selected-file-name" class="file-info hidden"></div>
-                            </div>
-                            <div id="resume-domain-container" class="hidden" style="width: 100%; max-width: 500px;">
-                                <input type="text" id="resume-domain-field" placeholder="Enter target role (e.g. Senior Frontend Engineer)" 
-                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1rem;">
-                                <button id="resume-start-btn" class="domain-btn" style="width: 100%; background: var(--accent-gradient);">Start Tailored Interview</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="technical-domains" class="domain-group active">
-                        <div class="domain-selection">
-                            <button class="domain-btn" data-domain="software-engineering">Software Engineering</button>
-                            <button class="domain-btn" data-domain="frontend">Frontend Developer</button>
-                            <button class="domain-btn" data-domain="backend">Backend Developer</button>
-                            <button class="domain-btn" data-domain="fullstack">Full-Stack Developer</button>
-                            <button class="domain-btn" data-domain="java-spring">Java & Spring Boot</button>
-                            <button class="domain-btn" data-domain="python">Python Developer</button>
-                            <button class="domain-btn" data-domain="data-science">Data Science / AIML</button>
-                            <button class="domain-btn" data-domain="lld">Low-Level Design (LLD)</button>
-                            <button class="domain-btn" data-domain="cad">CAD Design</button>
-                        </div>
-                    </div>
-
-                    <div id="non-technical-domains" class="domain-group">
-                        <div class="domain-selection">
-                            <button class="domain-btn" data-domain="hr">Human Resources (HR)</button>
-                            <button class="domain-btn" data-domain="product-management">Product Management</button>
-                            <button class="domain-btn" data-domain="marketing">Marketing</button>
-                            <button class="domain-btn" data-domain="sales">Sales</button>
-                            <button class="domain-btn" data-domain="finance">Finance</button>
-                        </div>
-                    </div>
-
-                    <div class="custom-domain-section">
-                        <p style="margin: 1.5rem 0 1rem 0; color: var(--text-secondary); font-size: 0.9rem;">Don't see
-                            your domain?</p>
-                        <button class="domain-btn custom-btn" data-domain="custom">Enter Custom Domain</button>
-
-                        <div id="custom-domain-input" class="hidden">
-                            <input type="text" id="custom-domain-field"
-                                placeholder="Enter your domain (e.g., Mechanical Engineering)">
-                            <button id="custom-domain-submit">Start Interview</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Interview Screen -->
-            <div id="interview-screen" class="screen">
-                <div class="chat-container" id="chat-container">
-                    <!-- Messages will be added here dynamically -->
-                </div>
-                <div class="loading-indicator" id="loading-indicator">
-                    <span></span><span></span><span></span>
-                </div>
-            </div>
-
-            <!-- Summary Screen -->
-            <div id="summary-screen" class="screen">
-                <div class="summary-content">
-                    <h2>Interview Summary</h2>
-                    <div id="summary-container">
-                        <!-- Summary content will be added here dynamically -->
-                    </div>
-                    <div class="summary-actions">
-                        <button id="new-interview-btn">Start New Interview</button>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Input Container (only shown during interview) -->
-        <div class="input-container" id="input-container">
-            <div class="input-wrapper">
-                <textarea id="user-input" placeholder="Type your answer here..." rows="1"></textarea>
-                <div class="input-buttons">
-                    <button class="input-button" id="feedback-button" title="Request Feedback"><i
-                            class="fas fa-comment-dots"></i></button>
-                    <button class="input-button" id="mic-button" title="Speak"><i
-                            class="fas fa-microphone"></i></button>
-                    <button class="input-button" id="send-button" title="Send Message"><i
-                            class="fas fa-paper-plane"></i></button>
-                </div>
-            </div>
-            <div class="command-buttons">
-                <button class="command-btn" id="repeat-btn"><i class="fas fa-redo"></i> Repeat Question</button>
-                <button class="command-btn" id="clarify-btn"><i class="fas fa-question-circle"></i> Ask for Clarification</button>
-            </div>
-            <div class="interview-controls">
-                <button id="end-interview-btn">End Interview</button>
-            </div>
-        </div>
+    <div class="header-actions">
+      <span class="provider-badge" id="header-provider-badge">GROQ</span>
+      <button class="icon-btn" id="settings-btn" title="Settings">
+        <i class="fas fa-sliders-h"></i>
+      </button>
     </div>
 
-    <!-- Toast notification element -->
-    <div class="toast" id="toast"></div>
-
-    <!-- Scripts -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // DOM Elements
-            const welcomeScreen = document.getElementById('welcome-screen');
-            const interviewScreen = document.getElementById('interview-screen');
-            const summaryScreen = document.getElementById('summary-screen');
-            const chatContainer = document.getElementById('chat-container');
-            const userInput = document.getElementById('user-input');
-            const sendButton = document.getElementById('send-button');
-            const micButton = document.getElementById('mic-button'); // Mic button when input is empty
-            const feedbackButton = document.getElementById('feedback-button'); // Acts as feedback or mic when input has text
-            const endInterviewBtn = document.getElementById('end-interview-btn');
-            const newInterviewBtn = document.getElementById('new-interview-btn');
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const inputContainer = document.getElementById('input-container');
-            const domainButtons = document.querySelectorAll('.domain-btn');
-            const customDomainInput = document.getElementById('custom-domain-input');
-            const customDomainField = document.getElementById('custom-domain-field');
-            const customDomainSubmit = document.getElementById('custom-domain-submit');
-            const summaryContainer = document.getElementById('summary-container');
-            const toast = document.getElementById('toast');
-            const speechToggle = document.getElementById('speech-toggle');
-            const voiceSelect = document.getElementById('voice-select');
-            const repeatBtn = document.getElementById('repeat-btn');
-            const clarifyBtn = document.getElementById('clarify-btn');
-
-            // State variables
-            let currentDomain = '';
-            let currentProvider = 'groq';
-            let interviewInProgress = false;
-            let isRecording = false;
-            let recognition = null;
-            let messageBeingSent = false;
-            let interviewContext = {
-                questions: [],
-                answers: [],
-                feedback: [],
-                currentQuestionIndex: 0,
-                interviewStage: 'basic', // Start with basic questions
-                lastUserResponse: '' // Track the last user response for context
-            };
-            let isSpeechEnabled = true;
-            let synth = window.speechSynthesis;
-            let voices = [];
-            let lastQuestion = '';
-
-            // Server URL for AI backend (same as in the original code)
-            const serverUrl = "http://127.0.0.1:8000";
-
-            // Base prompts have been moved to backend
-            // const INTERVIEW_PROMPT_BASE = ...
-
-
-            // Initialize speech recognition if available
-            function initSpeechRecognition() {
-                if ('webkitSpeechRecognition' in window) {
-                    recognition = new webkitSpeechRecognition();
-                    recognition.continuous = false;
-                    recognition.interimResults = false;
-                    recognition.lang = 'en-US';
-
-                    recognition.onstart = function () {
-                        isRecording = true;
-                        // Update correct button based on mode
-                        const hasText = userInput.value.trim() !== '';
-                        if (hasText) {
-                            feedbackButton.classList.add('recording');
-                        } else {
-                            micButton.classList.add('recording');
-                        }
-                        showToast('Listening...');
-                    };
-
-                    recognition.onresult = function (event) {
-                        const transcript = Array.from(event.results)
-                            .map(result => result[0])
-                            .map(result => result.transcript)
-                            .join('');
-
-                        // Append transcript to existing text if any
-                        const currentText = userInput.value;
-                        const separator = currentText.length > 0 && currentText.slice(-1) !== ' ' ? ' ' : '';
-                        userInput.value = currentText + separator + transcript;
-                        userInput.dispatchEvent(new Event('input'));
-                    };
-
-                    recognition.onerror = function (event) {
-                        console.error('Speech recognition error', event.error);
-                        isRecording = false;
-                        micButton.classList.remove('recording');
-                        feedbackButton.classList.remove('recording');
-                        showToast('Speech recognition error: ' + event.error);
-                    };
-
-                    recognition.onend = function () {
-                        isRecording = false;
-                        micButton.classList.remove('recording');
-                        feedbackButton.classList.remove('recording');
-                    };
-                } else {
-                    micButton.style.display = 'none';
-                    feedbackButton.style.display = 'none'; // Hide feedback button too if no mic
-                    showToast('Speech recognition not supported in this browser');
-                }
-            }
-
-            // Initialize text-to-speech
-            function initTextToSpeech() {
-                if ('speechSynthesis' in window) {
-                    // Populate voice select dropdown
-                    function populateVoiceList() {
-                        voices = synth.getVoices();
-                        voiceSelect.innerHTML = '';
-
-                        // Filter for English voices
-                        const englishVoices = voices.filter(voice => voice.lang.includes('en'));
-                        const voicesToUse = englishVoices.length > 0 ? englishVoices : voices;
-
-                        voicesToUse.forEach((voice, i) => {
-                            const option = document.createElement('option');
-                            option.textContent = voice.name + ' (' + voice.lang + ')';
-                            option.setAttribute('data-voice-index', i);
-                            option.setAttribute('value', voice.name);
-                            voiceSelect.appendChild(option);
-                        });
-
-                        // Try to select a good default voice
-                        const preferredVoices = ['Google UK English Male', 'Microsoft David', 'Alex'];
-                        let defaultVoice = 0;
-
-                        for (const preferred of preferredVoices) {
-                            const index = Array.from(voiceSelect.options).findIndex(
-                                option => option.value.includes(preferred)
-                            );
-                            if (index !== -1) {
-                                defaultVoice = index;
-                                break;
-                            }
-                        }
-
-                        voiceSelect.selectedIndex = defaultVoice;
-                    }
-
-                    populateVoiceList();
-
-                    if (speechSynthesis.onvoiceschanged !== undefined) {
-                        speechSynthesis.onvoiceschanged = populateVoiceList;
-                    }
-                } else {
-                    speechToggle.checked = false;
-                    speechToggle.disabled = true;
-                    voiceSelect.disabled = true;
-                    showToast('Text-to-speech not supported in this browser');
-                }
-            }
-
-            // Function to speak text
-            function speakText(text) {
-                if (!isSpeechEnabled || !synth) return;
-
-                // Cancel any ongoing speech
-                synth.cancel();
-
-                // Create a new utterance
-                const utterance = new SpeechSynthesisUtterance(text);
-
-                // Set the selected voice
-                const selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-voice-index');
-                if (selectedOption && voices[selectedOption]) {
-                    utterance.voice = voices[selectedOption];
-                }
-
-                // Set other properties
-                utterance.pitch = 1;
-                utterance.rate = 1;
-                utterance.volume = 1;
-
-                // Speak the text
-                synth.speak(utterance);
-            }
-
-            // Event Listeners
-            domainButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    const domain = this.dataset.domain;
-                    if (domain === 'custom') {
-                        customDomainInput.classList.remove('hidden');
-                        customDomainField.focus();
-                    } else {
-                        startInterview(domain);
-                    }
-                });
-            });
-
-            customDomainSubmit.addEventListener('click', function () {
-                const customDomain = customDomainField.value.trim();
-                if (customDomain) {
-                    startInterview(customDomain);
-                } else {
-                    showToast('Please enter a domain');
-                }
-            });
-
-            // Speech toggle
-            speechToggle.addEventListener('change', function () {
-                isSpeechEnabled = this.checked;
-                if (isSpeechEnabled) {
-                    showToast('Text-to-speech enabled');
-                    voiceSelect.disabled = false;
-                } else {
-                    showToast('Text-to-speech disabled');
-                    voiceSelect.disabled = true;
-                    if (synth) synth.cancel(); // Stop any ongoing speech
-                }
-            });
-
-            // Command buttons
-            repeatBtn.addEventListener('click', function () {
-                if (lastQuestion) {
-                    addMessageToUI('interviewer', lastQuestion);
-                    speakText(lastQuestion);
-                } else {
-                    showToast('No question to repeat');
-                }
-            });
-
-            clarifyBtn.addEventListener('click', function () {
-                if (lastQuestion) {
-                    requestClarification();
-                } else {
-                    showToast('No question to clarify');
-                }
-            });
-
-            // Provider Selection Logic
-            const providerCards = document.querySelectorAll('.provider-card');
-            providerCards.forEach(card => {
-                card.addEventListener('click', function () {
-                    providerCards.forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                    currentProvider = this.dataset.provider;
-                });
-            });
-
-            // Tab Switching Logic
-            const categoryTabs = document.querySelectorAll('.category-tab');
-            const domainGroups = document.querySelectorAll('.domain-group');
-
-            categoryTabs.forEach(tab => {
-                tab.addEventListener('click', function () {
-                    // Remove active class from all tabs and groups
-                    categoryTabs.forEach(t => t.classList.remove('active'));
-                    domainGroups.forEach(g => g.classList.remove('active'));
-
-                    // Add active class to clicked tab
-                    this.classList.add('active');
-
-                    // Show the corresponding domain group
-                    const targetId = this.getAttribute('data-target');
-                    document.getElementById(targetId).classList.add('active');
-
-                    // Hide custom domain input if it was open
-                    customDomainInput.classList.add('hidden');
-                });
-            });
-
-            // Helper function to update button visibility and state based on input content
-            function updateInputButtonState() {
-                const hasText = userInput.value.trim() !== '';
-
-                // Toggle button visibility
-                micButton.style.display = hasText ? 'none' : 'flex'; // Mic only when empty
-                sendButton.style.display = hasText ? 'flex' : 'none'; // Send only when text
-                feedbackButton.style.display = 'flex'; // Always show feedback/mic button
-
-                // Change feedback button icon and title based on text presence
-                const feedbackIcon = feedbackButton.querySelector('i');
-                if (hasText) {
-                    feedbackIcon.className = 'fas fa-microphone'; // Change to mic icon
-                    feedbackButton.title = 'Append Speech';
-                    feedbackButton.classList.add('mic-mode');
-                } else {
-                    feedbackIcon.className = 'fas fa-comment-dots'; // Change back to feedback icon
-                    feedbackButton.title = 'Request Feedback';
-                    feedbackButton.classList.remove('mic-mode');
-                }
-
-                // Enable/disable send button
-                sendButton.disabled = !hasText;
-            }
-
-            // Dynamic input bar expansion
-            userInput.addEventListener('input', function () {
-                // Reset height to calculate proper scrollHeight
-                userInput.style.height = 'auto';
-
-                // Get line height from computed style
-                const lineHeight = parseFloat(getComputedStyle(userInput).lineHeight) || 24;
-
-                // Calculate number of lines (minimum 1, maximum 10)
-                const minHeight = lineHeight * 1;
-                const maxHeight = lineHeight * 10;
-
-                // Set new height based on content
-                const newHeight = Math.min(Math.max(userInput.scrollHeight, minHeight), maxHeight);
-                userInput.style.height = newHeight + 'px';
-
-                // Update button state based on current input value
-                updateInputButtonState();
-            });
-
-            sendButton.addEventListener('click', sendUserMessage);
-
-            userInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendUserMessage();
-                }
-            });
-
-            // Mic button (only active when input is empty)
-            micButton.addEventListener('click', function () {
-                if (!isRecording && recognition && userInput.value.trim() === '') {
-                    recognition.start();
-                } else if (isRecording && recognition) {
-                    recognition.stop();
-                }
-            });
-
-            // Feedback button (acts as feedback or mic)
-            feedbackButton.addEventListener('click', function () {
-                const hasText = userInput.value.trim() !== '';
-                if (hasText) {
-                    // Act as mic button (append speech)
-                    if (!isRecording && recognition) {
-                        recognition.start();
-                    } else if (isRecording && recognition) {
-                        recognition.stop();
-                    }
-                } else {
-                    // Act as feedback button
-                    requestFeedback();
-                }
-            });
-
-            repeatBtn.addEventListener('click', function() {
-                if (lastQuestion) {
-                    addMessageToUI('interviewer', lastQuestion);
-                    speakText(lastQuestion);
-                } else {
-                    showToast('No question to repeat');
-                }
-            });
-
-            clarifyBtn.addEventListener('click', function() {
-                if (interviewInProgress) {
-                    requestClarification();
-                } else {
-                    showToast('Start an interview first');
-                }
-            });
-
-            endInterviewBtn.addEventListener('click', endInterview);
-
-            newInterviewBtn.addEventListener('click', function () {
-                // Reset to welcome screen
-                switchToScreen('welcome');
-                resetInterview();
-            });
-
-            // Functions
-            function switchToScreen(screenName) {
-                // Hide all screens
-                welcomeScreen.classList.remove('active');
-                interviewScreen.classList.remove('active');
-                summaryScreen.classList.remove('active');
-
-                // Show input container only during interview
-                inputContainer.style.display = screenName === 'interview' ? 'flex' : 'none';
-
-                // Show the requested screen
-                switch (screenName) {
-                    case 'welcome':
-                        welcomeScreen.classList.add('active');
-                        break;
-                    case 'interview':
-                        interviewScreen.classList.add('active');
-                        break;
-                    case 'summary':
-                        summaryScreen.classList.add('active');
-                        break;
-                }
-            }
-
-            function startInterview(domain) {
-                currentDomain = domain;
-                interviewInProgress = true;
-                interviewContext = {
-                    sessionId: '', // New session ID from backend
-                    domain: domain,
-                    model_provider: currentProvider,
-                    lastUserResponse: ''
-                };
-
-                // Switch to interview screen
-                switchToScreen('interview');
-
-                // Clear chat container
-                chatContainer.innerHTML = '';
-
-                // Add system message
-                const providerName = currentProvider.charAt(0).toUpperCase() + currentProvider.slice(1);
-                addMessageToUI('system', `Starting ${providerName} interview in ${domain}`);
-
-                // Request first question
-                requestNextQuestion();
-            }
-
-            function resetInterview() {
-                currentDomain = '';
-                interviewInProgress = false;
-                interviewContext = {
-                    sessionId: '',
-                    domain: '',
-                    lastUserResponse: ''
-                };
-                lastQuestion = '';
-
-                // Clear chat container
-                chatContainer.innerHTML = '';
-
-                // Reset input
-                userInput.value = '';
-                userInput.dispatchEvent(new Event('input'));
-                userInput.placeholder = 'Type your answer here...';
-                userInput.disabled = false;
-
-                // Stop any ongoing speech
-                if (synth) synth.cancel();
-            }
-
-            // Check if message is a command
-            function isCommand(message) {
-                const lowerMessage = message.toLowerCase().trim();
-
-                // List of command phrases
-                const repeatCommands = [
-                    'repeat', 'repeat question', 'repeat that', 'say again', 'repeat again',
-                    'can you repeat', 'could you repeat', 'what was the question', 'pardon'
-                ];
-
-                const clarifyCommands = [
-                    'clarify', 'explain', 'what do you mean', 'i don\'t understand',
-                    'can you explain', 'could you clarify', 'please explain', 'please clarify'
-                ];
-
-                // Check if message matches any command
-                for (const cmd of repeatCommands) {
-                    if (lowerMessage === cmd || lowerMessage.includes(cmd + ' ') || lowerMessage.includes(' ' + cmd)) {
-                        return 'repeat';
-                    }
-                }
-
-                for (const cmd of clarifyCommands) {
-                    if (lowerMessage === cmd || lowerMessage.includes(cmd + ' ') || lowerMessage.includes(' ' + cmd)) {
-                        return 'clarify';
-                    }
-                }
-
-                return false;
-            }
-
-            async function sendUserMessage() {
-                const messageText = userInput.value.trim();
-                if (!messageText || messageBeingSent) return;
-
-                messageBeingSent = true;
-                sendButton.disabled = true;
-                userInput.value = '';
-                userInput.dispatchEvent(new Event('input'));
-                userInput.disabled = true;
-
-                // Add user message to UI
-                addMessageToUI('user', messageText);
-
-                // Check for special commands
-                if (messageText.toLowerCase() === 'end interview') {
-                    endInterview();
-                    messageBeingSent = false;
-                    userInput.disabled = false;
-                    return;
-                }
-
-                // Check if message is a command
-                const commandType = isCommand(messageText);
-                if (commandType) {
-                    if (commandType === 'repeat') {
-                        // Repeat the last question
-                        if (lastQuestion) {
-                            addMessageToUI('interviewer', lastQuestion);
-                            speakText(lastQuestion);
-                        } else {
-                            addMessageToUI('system', 'No question to repeat');
-                        }
-                    } else if (commandType === 'clarify') {
-                        // Request clarification
-                        await requestClarification();
-                    }
-
-                    messageBeingSent = false;
-                    userInput.disabled = false;
-                    return;
-                }
-
-                // Update last user response for UI tracking if needed
-                interviewContext.lastUserResponse = messageText;
-
-                // Check if feedback was requested (simple check, though backend can handle this too if we want)
-                if (messageText.toLowerCase().includes('give feedback') ||
-                    messageText.toLowerCase().includes('evaluate')) {
-                    await requestFeedback();
-                } else {
-                    // Send answer to backend and get next question
-                    loadingIndicator.style.display = 'flex';
-                    try {
-                        const response = await fetch(`${serverUrl}/api/interview/answer`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                session_id: interviewContext.sessionId,
-                                answer: messageText
-                            }),
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-
-                        const data = await response.json();
-                        const rawQuestion = data.reply || "I don't have any more questions.";
-                        const question = cleanAIResponse(rawQuestion);
-
-                        // Store the question
-                        lastQuestion = question;
-
-                        // Add interviewer message to UI
-                        addMessageToUI('interviewer', question);
-
-                        // Speak the question
-                        speakText(question);
-
-                    } catch (error) {
-                        console.error('Error sending answer:', error);
-                        addMessageToUI('system', 'Error processing answer. Please try again.');
-                    } finally {
-                        loadingIndicator.style.display = 'none';
-                    }
-                }
-
-                messageBeingSent = false;
-                userInput.disabled = false;
-            }
-
-            // formatContextForPrompt function removed as context is handled by backend
-
-
-            // Function to clean AI response (remove prefixes)
-            function cleanAIResponse(rawResponse) {
-                // Remove potential prefixes like "text: ", "speech: ", etc.
-                return rawResponse.replace(/^(text|speech):\s*\[?/i, '').replace(/\]$/, '').trim();
-            }
-
-            // Resume Upload Logic
-            const dropZone = document.getElementById('resume-drop-zone');
-            const resumeInput = document.getElementById('resume-input');
-            const fileNameDisplay = document.getElementById('selected-file-name');
-            const resumeDomainContainer = document.getElementById('resume-domain-container');
-            const resumeStartBtn = document.getElementById('resume-start-btn');
-            let selectedFile = null;
-
-            dropZone.addEventListener('click', () => resumeInput.click());
-
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('dragover');
-            });
-
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-                if (e.dataTransfer.files.length > 0) {
-                    handleFileSelection(e.dataTransfer.files[0]);
-                }
-            });
-
-            resumeInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handleFileSelection(e.target.files[0]);
-                }
-            });
-
-            function handleFileSelection(file) {
-                selectedFile = file;
-                fileNameDisplay.textContent = `Selected: ${file.name}`;
-                fileNameDisplay.classList.remove('hidden');
-                resumeDomainContainer.classList.remove('hidden');
-            }
-
-            resumeStartBtn.addEventListener('click', () => {
-                const domain = document.getElementById('resume-domain-field').value || 'General';
-                startInterviewWithResume(domain, selectedFile);
-            });
-
-            async function startInterviewWithResume(domain, file) {
-                if (!file) return showToast('Please upload a resume first');
-                
-                currentDomain = domain;
-                interviewInProgress = true;
-                
-                welcomeScreen.classList.remove('active');
-                interviewScreen.classList.add('active');
-                inputContainer.classList.add('active');
-                
-                chatContainer.innerHTML = '';
-                addMessageToUI('system', `Analysing resume for ${domain} role...`);
-                
-                const formData = new FormData();
-                formData.append('domain', domain);
-                formData.append('resume', file);
-                formData.append('model_provider', currentProvider);
-
-                try {
-                    loadingIndicator.classList.add('active');
-                    const response = await fetch(`${serverUrl}/api/interview/start`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.detail || 'Failed to start interview');
-                    
-                    interviewContext = {
-                        sessionId: data.session_id,
-                        domain: domain,
-                        model_provider: currentProvider,
-                        lastUserResponse: ''
-                    };
-                    
-                    loadingIndicator.classList.remove('active');
-                    addMessageToUI('interviewer', data.reply);
-                    if (isSpeechEnabled) speakText(data.reply);
-                } catch (error) {
-                    loadingIndicator.classList.remove('active');
-                    console.error('CRITICAL: Failed to start interview:', error);
-                    showToast(`Error: ${error.message}`);
-                    addMessageToUI('system', `❌ Error starting interview: ${error.message}. Check your browser console (F12) for details.`);
-                }
-            }
-
-            async function requestNextQuestion() {
-                loadingIndicator.style.display = 'flex';
-
-                try {
-                    // For the first question, we call /start endpoints
-                    // Subsequent questions come from /answer or we can have a logic here
-
-                    let response;
-                    let body;
-
-                    if (!interviewContext.sessionId) {
-                        // Start interview using FormData (consistent with resume upload)
-                        const formData = new FormData();
-                        formData.append('domain', currentDomain);
-                        formData.append('model_provider', currentProvider);
-
-                        response = await fetch(`${serverUrl}/api/interview/start`, {
-                            method: 'POST',
-                            body: formData
-                        });
-                    } else {
-                        // This function shouldn't strictly be used for "next question" after an answer
-                        // because "answer_question" returns the next question.
-                        // However, startInterview calls this.
-                        return; // Logic handled in sendUserMessage or startInterview
-                    }
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-
-                    if (data.session_id) {
-                        interviewContext.sessionId = data.session_id;
-                    }
-
-                    const rawQuestion = data.reply || "I don't have any more questions.";
-                    const question = cleanAIResponse(rawQuestion);
-
-                    // Store the question
-                    lastQuestion = question;
-
-                    // Add interviewer message to UI
-                    addMessageToUI('interviewer', question);
-
-                    // Speak the question
-                    speakText(question);
-
-                } catch (error) {
-                    console.error('Error requesting next question:', error);
-                    let errMsg = error.message;
-                    if (error.message.includes('Failed to fetch')) {
-                        errMsg = "Cannot connect to AI server at " + serverUrl + ". Please ensure backend is running.";
-                    }
-                    addMessageToUI('system', `❌ Connection Error: ${errMsg}`);
-                    showToast('Server Connectivity Error');
-                } finally {
-                    loadingIndicator.style.display = 'none';
-                }
-            }
-
-            async function requestClarification() {
-                if (!lastQuestion) {
-                    showToast('No question to clarify');
-                    return;
-                }
-
-                loadingIndicator.style.display = 'flex';
-
-                try {
-                    const response = await fetch(`${serverUrl}/api/interview/clarify`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ session_id: interviewContext.sessionId }),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    const rawClarification = data.reply || "I apologize, but I don't have additional clarification at this time.";
-                    const clarification = cleanAIResponse(rawClarification);
-
-                    // Add clarification message to UI
-                    addMessageToUI('interviewer', clarification);
-
-                    // Speak the clarification
-                    speakText(clarification);
-
-                } catch (error) {
-                    console.error('Error requesting clarification:', error);
-                    addMessageToUI('system', 'Error requesting clarification. Please try again.');
-                } finally {
-                    loadingIndicator.style.display = 'none';
-                }
-            }
-
-            async function requestFeedback() {
-                // Check if we have a session
-                if (!interviewContext.sessionId) {
-                    showToast('Please start an interview first');
-                    return;
-                }
-
-                loadingIndicator.style.display = 'flex';
-
-                try {
-                    const response = await fetch(`${serverUrl}/api/interview/feedback`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ session_id: interviewContext.sessionId }),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    const rawFeedback = data.reply || "I don't have specific feedback at this time.";
-                    const feedback = cleanAIResponse(rawFeedback);
-
-                    // Add feedback message to UI
-                    addMessageToUI('feedback', feedback);
-
-                    // Speak the feedback
-                    speakText(feedback);
-
-                } catch (error) {
-                    console.error('Error requesting feedback:', error);
-                    addMessageToUI('system', 'Error requesting feedback. Please try again.');
-                } finally {
-                    loadingIndicator.style.display = 'none';
-                }
-            }
-
-            async function endInterview() {
-                if (!interviewInProgress) return;
-
-                interviewInProgress = false;
-                loadingIndicator.style.display = 'flex';
-
-                try {
-                    const response = await fetch(`${serverUrl}/api/interview/end`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ session_id: interviewContext.sessionId }),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    const rawSummary = data.reply || "Thank you for completing the interview.";
-                    const summary = cleanAIResponse(rawSummary);
-
-                    // Display summary
-                    summaryContainer.innerHTML = summary;
-
-                    // Switch to summary screen
-                    switchToScreen('summary');
-
-                    // Speak the summary
-                    speakText(summary);
-
-                } catch (error) {
-                    console.error('Error generating summary:', error);
-                    addMessageToUI('system', 'Error generating interview summary. Please try again.');
-                } finally {
-                    loadingIndicator.style.display = 'none';
-                }
-            }
-
-            function addMessageToUI(sender, content) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', sender);
-
-                if (sender === 'system') {
-                    messageDiv.textContent = content;
-                } else {
-                    // Sanitize content before setting innerHTML if needed, or use textContent
-                    messageDiv.textContent = content; // Safer approach
-                }
-
-                chatContainer.appendChild(messageDiv);
-                chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
-            }
-
-            function showToast(message) {
-                toast.textContent = message;
-                toast.classList.add('show');
-
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
-            }
-
-            // Initialize
-            initSpeechRecognition();
-            initTextToSpeech();
-            switchToScreen('welcome');
-            updateInputButtonState();
-        });
-    </script>
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settings-panel">
+      <div class="settings-section-title">Voice &amp; Speech</div>
+      <div class="toggle-row">
+        <label for="speech-toggle">Auto-speak questions</label>
+        <label class="toggle">
+          <input type="checkbox" id="speech-toggle">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="settings-section-title" style="margin-top:0.75rem;">Voice</div>
+      <select class="settings-select" id="voice-select">
+        <option>Loading voices…</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- ═══ MAIN ═══ -->
+  <main>
+
+    <!-- ─── WELCOME SCREEN ─── -->
+    <div class="screen active" id="screen-welcome">
+      <div class="welcome-scroll">
+
+        <!-- Hero -->
+        <div class="welcome-hero">
+          <div class="badge-pill">
+            <i class="fas fa-bolt"></i> AI-Powered Interview Coach
+          </div>
+          <h1>Ace Your <span>Next Interview</span></h1>
+          <p>Practice with realistic AI interviewers, get instant feedback and a detailed performance dashboard after every session.</p>
+        </div>
+
+        <!-- Setup Card -->
+        <div class="setup-card">
+
+          <!-- AI Provider -->
+          <div>
+            <div class="setup-label">Choose AI Provider</div>
+            <div class="provider-row">
+              <div class="provider-card selected" data-provider="groq">
+                <div class="p-icon"><i class="fas fa-bolt"></i></div>
+                <div class="p-name">Groq</div>
+                <div class="p-model">Llama 3.3 · Ultra-fast</div>
+              </div>
+              <div class="provider-card" data-provider="gemini">
+                <div class="p-icon"><i class="fas fa-brain"></i></div>
+                <div class="p-name">Gemini</div>
+                <div class="p-model">Flash 1.5 · Advanced</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Domain Dropdown -->
+          <div>
+            <div class="setup-label">Select Interview Domain</div>
+            <div class="domain-row">
+              <div class="field-group" style="flex:2;">
+                <label for="domain-select">Role / Domain</label>
+                <select class="field-select" id="domain-select">
+                  <optgroup label="── Technical ──">
+                    <option value="Software Engineering">Software Engineering</option>
+                    <option value="Frontend Developer">Frontend Developer</option>
+                    <option value="Backend Developer">Backend Developer</option>
+                    <option value="Full-Stack Developer">Full-Stack Developer</option>
+                    <option value="Java & Spring Boot">Java &amp; Spring Boot</option>
+                    <option value="Python Developer">Python Developer</option>
+                    <option value="Data Science / AI ML">Data Science / AI+ML</option>
+                    <option value="DevOps Engineer">DevOps Engineer</option>
+                    <option value="System Design">System Design</option>
+                    <option value="Low-Level Design">Low-Level Design</option>
+                    <option value="Mobile Developer">Mobile Developer</option>
+                    <option value="custom">✏ Enter Custom Domain…</option>
+                  </optgroup>
+                  <optgroup label="── Non-Technical ──">
+                    <option value="Human Resources (HR)">Human Resources (HR)</option>
+                    <option value="Product Management">Product Management</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Operations">Operations</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="field-group" id="custom-domain-group" style="display:none; flex:1.2;">
+                <label for="custom-domain-field">Custom Domain</label>
+                <input type="text" class="field-input" id="custom-domain-field" placeholder="e.g. Mechanical Engineering">
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-start" id="start-btn">
+            <i class="fas fa-play-circle"></i> Start Interview
+          </button>
+
+        </div>
+
+        <!-- Resume Upload Card -->
+        <div class="setup-card">
+          <div class="setup-label" style="margin-bottom:0;">
+            <i class="fas fa-file-alt" style="color:var(--accent); margin-right:0.4rem;"></i>
+            Upload Resume for a Tailored Interview <span style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0;">(optional)</span>
+          </div>
+
+          <div class="resume-drop" id="resume-drop">
+            <div class="drop-icon"><i class="fas fa-file-upload"></i></div>
+            <p>Click or drag &amp; drop your resume here</p>
+            <p style="font-size:0.75rem; margin-top:0.3rem; color:var(--text-muted);">PDF or DOCX · Max 10 MB</p>
+            <div class="file-name" id="resume-file-name" style="display:none;"></div>
+            <input type="file" id="resume-file-input" accept=".pdf,.docx">
+          </div>
+
+          <div id="resume-domain-row" style="display:none;">
+            <div class="field-group">
+              <label for="resume-domain-input">Target Role (for resume-tailored questions)</label>
+              <input type="text" class="field-input" id="resume-domain-input" placeholder="e.g. Senior Frontend Engineer at Google">
+            </div>
+            <button class="btn-start" id="resume-start-btn" style="margin-top:0.875rem;">
+              <i class="fas fa-play-circle"></i> Start Tailored Interview
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /welcome -->
+
+    <!-- ─── INTERVIEW SCREEN ─── -->
+    <div class="screen" id="screen-interview">
+
+      <!-- Chat Panel -->
+      <div class="interview-chat">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="typing-indicator" id="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-area">
+          <div class="input-box">
+            <textarea id="user-input" placeholder="Type your answer… (Enter to send, Shift+Enter for new line)" rows="1"></textarea>
+            <div class="input-actions">
+              <button class="act-btn secondary" id="mic-btn" title="Voice input">
+                <i class="fas fa-microphone"></i>
+              </button>
+              <button class="act-btn primary-action" id="send-btn" title="Send answer">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+          <div class="input-hints">
+            <button class="hint-btn" id="hint-clarify"><i class="fas fa-question-circle"></i> Clarify</button>
+            <button class="hint-btn" id="hint-repeat"><i class="fas fa-redo"></i> Repeat</button>
+            <button class="hint-btn" id="hint-feedback"><i class="fas fa-star"></i> Get Feedback</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="interview-sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Session Info</div>
+          <div class="stat-row"><span class="stat-label">Domain</span><span class="stat-value accent" id="stat-domain">—</span></div>
+          <div class="stat-row"><span class="stat-label">Provider</span><span class="stat-value" id="stat-provider">—</span></div>
+          <div class="stat-row"><span class="stat-label">Questions</span><span class="stat-value accent" id="stat-questions">0</span></div>
+          <div class="stat-row"><span class="stat-label">Stage</span><span class="stage-pill basic" id="stat-stage">Basic</span></div>
+          <div class="stat-row"><span class="stat-label">Time</span><span class="stat-value" id="elapsed-timer">00:00</span></div>
+        </div>
+
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <button class="sidebar-btn" id="sidebar-clarify"><i class="fas fa-question-circle"></i> Clarify Question</button>
+            <button class="sidebar-btn" id="sidebar-repeat"><i class="fas fa-redo"></i> Repeat Question</button>
+            <button class="sidebar-btn end" id="sidebar-end"><i class="fas fa-flag-checkered"></i> End &amp; See Results</button>
+          </div>
+        </div>
+
+        <div class="sidebar-card" style="flex:1;overflow-y:auto;">
+          <div class="sidebar-card-title">Interview Tips</div>
+          <ul class="fb-list" style="padding:0;list-style:none;">
+            <li>Use the STAR method (Situation, Task, Action, Result).</li>
+            <li>Be specific — mention numbers, tools, and outcomes.</li>
+            <li>Click <strong>Clarify</strong> if a question seems unclear.</li>
+            <li>Click <strong>Get Feedback</strong> for instant coaching.</li>
+          </ul>
+        </div>
+      </aside>
+    </div><!-- /interview -->
+
+    <!-- ─── DASHBOARD SCREEN ─── -->
+    <div class="screen" id="screen-dashboard">
+      <div class="dashboard-scroll">
+
+        <div class="dashboard-header">
+          <div>
+            <h2><i class="fas fa-chart-bar" style="color:var(--accent);margin-right:0.5rem;"></i>Performance Report</h2>
+            <div class="meta" id="dash-meta">—</div>
+          </div>
+          <div class="dash-actions">
+            <button class="btn-secondary" id="dash-history-btn"><i class="fas fa-history"></i> History</button>
+            <button class="btn-start" id="dash-new-btn" style="width:auto;padding:0.6rem 1.25rem;"><i class="fas fa-plus"></i> New Interview</button>
+          </div>
+        </div>
+
+        <!-- Gauges -->
+        <div class="gauge-grid">
+          <div class="gauge-card">
+            <div class="gauge-wrap" id="gauge-overall">
+              <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+                <circle class="gauge-track" cx="44" cy="44" r="36"/>
+                <circle class="gauge-fill" cx="44" cy="44" r="36" stroke-dasharray="226" stroke-dashoffset="226"/>
+              </svg>
+              <div class="gauge-value">–<span>/ 100</span></div>
+            </div>
+            <div class="gauge-label">Overall Score</div>
+          </div>
+          <div class="gauge-card">
+            <div class="gauge-wrap" id="gauge-communication">
+              <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+                <circle class="gauge-track" cx="44" cy="44" r="36"/>
+                <circle class="gauge-fill" cx="44" cy="44" r="36" stroke-dasharray="226" stroke-dashoffset="226"/>
+              </svg>
+              <div class="gauge-value">–<span>/ 100</span></div>
+            </div>
+            <div class="gauge-label">Communication</div>
+          </div>
+          <div class="gauge-card">
+            <div class="gauge-wrap" id="gauge-technical">
+              <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+                <circle class="gauge-track" cx="44" cy="44" r="36"/>
+                <circle class="gauge-fill" cx="44" cy="44" r="36" stroke-dasharray="226" stroke-dashoffset="226"/>
+              </svg>
+              <div class="gauge-value">–<span>/ 100</span></div>
+            </div>
+            <div class="gauge-label">Technical</div>
+          </div>
+          <div class="gauge-card">
+            <div class="gauge-wrap" id="gauge-confidence">
+              <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+                <circle class="gauge-track" cx="44" cy="44" r="36"/>
+                <circle class="gauge-fill" cx="44" cy="44" r="36" stroke-dasharray="226" stroke-dashoffset="226"/>
+              </svg>
+              <div class="gauge-value">–<span>/ 100</span></div>
+            </div>
+            <div class="gauge-label">Confidence</div>
+          </div>
+        </div>
+
+        <!-- Strengths / Improvements -->
+        <div class="feedback-row">
+          <div class="fb-card strengths">
+            <div class="fb-title"><i class="fas fa-check-circle"></i> Key Strengths</div>
+            <ul class="fb-list" id="dash-strengths"><li>Generating…</li></ul>
+          </div>
+          <div class="fb-card improvements">
+            <div class="fb-title"><i class="fas fa-arrow-up"></i> Areas to Improve</div>
+            <ul class="fb-list" id="dash-improvements"><li>Generating…</li></ul>
+          </div>
+        </div>
+
+        <!-- Full summary -->
+        <div class="summary-card">
+          <h3><i class="fas fa-file-alt"></i> Detailed Assessment</h3>
+          <div class="summary-body" id="dash-summary">Loading summary…</div>
+        </div>
+
+      </div>
+    </div><!-- /dashboard -->
+
+    <!-- ─── HISTORY SCREEN ─── -->
+    <div class="screen" id="screen-history">
+      <div class="history-wrap">
+        <div class="history-header">
+          <h2><i class="fas fa-history" style="color:var(--accent);margin-right:0.5rem;"></i>Interview History</h2>
+          <p>All completed mock interviews with scores and detailed reports.</p>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Domain</th>
+                <th>Date</th>
+                <th>Questions</th>
+                <th>Score</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <tr><td colspan="5"><div class="history-empty"><i class="fas fa-history"></i>No interviews yet. Start one from the Home screen!</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /history -->
+
+  </main>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Processing…</div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="interviewer.js"></script>
 </body>
-
 </html>
