@@ -211,7 +211,8 @@ def parse_score(raw: str) -> dict:
     except Exception as e:
         logger.warning(f"Score parse failed: {e}")
     return {
-        "overall": 70, "communication": 70, "technical": 70, "confidence": 70,
+        "overall": 70, "technical": 70, "problem_solving": 70, 
+        "communication": 70, "clarity": 70, "confidence": 70,
         "strengths": ["Completed the interview"], "improvements": ["Practice more"]
     }
 

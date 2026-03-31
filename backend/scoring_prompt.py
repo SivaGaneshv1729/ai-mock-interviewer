@@ -1,24 +1,27 @@
-SCORING_PROMPT = """You are a strict interview evaluator. Analyse EVERY question-answer pair in this transcript carefully.
+SCORING_PROMPT = """You are a strict, professional interview evaluator. Analyse EVERY question-answer pair in this transcript carefully.
 
 Domain: {domain}
 
 Transcript:
 {context}
 
-Evaluate each dimension based strictly on evidence from the answers above:
+Evaluate exactly five key dimensions based on evidence:
 
-- communication (0-100): Was the candidate clear, structured, and articulate? Penalise vague, one-word, or rambling answers.
-- technical (0-100): Were domain-specific facts, tools, or concepts mentioned correctly? Penalise generic answers with no technical depth.
-- confidence (0-100): Did the candidate commit to answers without excessive hedging ("I think maybe…")? Penalise uncertainty or incomplete answers.
-- overall (0-100): Weighted blend — technical 40%, communication 35%, confidence 25%.
+- technical (0-100): Domain accuracy. Did they mention specific facts/tools/{domain} concepts? Penalise generic answers.
+- problem_solving (0-100): Analytical approach. Did they structure their thoughts or consider edge cases?
+- communication (0-100): Articulation and structure. Was the tone professional and the pacing clear?
+- clarity (0-100): Precision. Did they answer the specific question asked without rambling?
+- confidence (0-100): Committing to answers. Penalise excessive hedging (e.g. "maybe", "I guess").
 
-Strengths and improvements must cite SPECIFIC answers from the transcript (e.g. "In answer 2, the candidate correctly described…").
+- overall (0-100): Weighted blend — technical 30%, problem_solving 20%, communication 20%, clarity 15%, confidence 15%.
 
 Return ONLY a valid JSON object — no markdown, no explanation:
 {{
   "overall": <integer 0-100>,
-  "communication": <integer 0-100>,
   "technical": <integer 0-100>,
+  "problem_solving": <integer 0-100>,
+  "communication": <integer 0-100>,
+  "clarity": <integer 0-100>,
   "confidence": <integer 0-100>,
   "strengths": ["<evidence-based strength>", "<evidence-based strength>"],
   "improvements": ["<evidence-based improvement>", "<evidence-based improvement>"]

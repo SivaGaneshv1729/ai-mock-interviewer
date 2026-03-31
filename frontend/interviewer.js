@@ -185,10 +185,22 @@ async function endInterview() {
 // ── Dashboard Charts ──
 let radarChart; 
 function renderDashboard(score, summary) {
-  const s = score || { overall: 75, communication: 75, technical: 75, confidence: 75 };
+  const s = score || { overall: 70, technical: 70, problem_solving: 70, communication: 70, clarity: 70, confidence: 70 };
   
   $('dash-overall-badge').textContent = s.overall;
+  $('m-tech').textContent = s.technical;
+  $('m-prob').textContent = s.problem_solving;
+  $('m-comm').textContent = s.communication;
+  $('m-clar').textContent = s.clarity;
+  $('m-conf').textContent = s.confidence;
+  
   $('dash-summary').innerHTML = summary; 
+
+  // Render Lists
+  const strengthsCont = $('report-strengths');
+  const improvementsCont = $('report-improvements');
+  if (strengthsCont) strengthsCont.innerHTML = (s.strengths || []).map(str => `<li>${str}</li>`).join('');
+  if (improvementsCont) improvementsCont.innerHTML = (s.improvements || []).map(imp => `<li>${imp}</li>`).join('');
 
   const ctx = $('radar-chart');
   if (radarChart) radarChart.destroy();
@@ -196,15 +208,15 @@ function renderDashboard(score, summary) {
   radarChart = new Chart(ctx, {
     type: 'radar',
     data: {
-      labels: ['Communication', 'Technical', 'Confidence'],
+      labels: ['Technical', 'Problem Solving', 'Communication', 'Clarity', 'Confidence'],
       datasets: [{
-        label: 'Aptitude Profile',
-        data: [s.communication, s.technical, s.confidence],
-        backgroundColor: 'rgba(161, 141, 255, 0.2)',
-        borderColor: '#a18dff',
+        label: 'Candidate Profile',
+        data: [s.technical, s.problem_solving, s.communication, s.clarity, s.confidence],
+        backgroundColor: 'rgba(42, 140, 244, 0.2)',
+        borderColor: '#2a8cf4',
         borderWidth: 3,
-        pointBackgroundColor: '#7d5fff',
-        pointRadius: 5
+        pointBackgroundColor: '#2a8cf4',
+        pointRadius: 4
       }]
     },
     options: {
@@ -213,16 +225,18 @@ function renderDashboard(score, summary) {
           min: 0, max: 100, 
           ticks: { display: false },
           grid: { color: 'rgba(0,0,0,0.05)' },
-          angleLines: { color: 'rgba(0,0,0,0.05)' }
+          angleLines: { color: 'rgba(0,0,0,0.05)' },
+          pointLabels: { font: { size: 10, weight: '700' } }
         } 
       },
       plugins: { legend: { display: false } },
-      animation: { duration: 2000, easing: 'easeOutQuart' }
+      animation: { duration: 1500, easing: 'easeOutQuart' }
     }
   });
 }
 
 // ── History Screen ──
+let currentHistory = [];
 async function loadHistory() {
   const container = $('history-list');
   if (!container) return;
@@ -230,34 +244,60 @@ async function loadHistory() {
   
   try {
     const data = await apiFetch('/api/interview/history');
-    const logs = data.history || [];
-    
-    if (logs.length === 0) {
-      container.innerHTML = '<div class="empty-state">No previous sessions recorded. Start practicing to see results.</div>';
-      return;
-    }
-    
-    container.innerHTML = logs.map(l => {
-      const date = new Date(l.created_at).toLocaleDateString();
-      const score = l.score ? l.score.overall : '--';
-      return `
-        <div class="history-item">
-          <div class="h-info">
-            <span class="h-domain">${l.domain}</span>
-            <span class="h-date">${date}</span>
-          </div>
-          <div class="h-score">
-             <span class="lbl">Score</span>
-             <span class="val">${score}</span>
-          </div>
-          <button class="h-btn" onclick="viewDetails('${l.session_id}')">View Report</button>
-        </div>
-      `;
-    }).join('');
+    currentHistory = data.history || [];
+    renderHistoryList();
   } catch (e) {
     container.innerHTML = '<div class="error-msg">Failed to load history.</div>';
   }
 }
+
+function renderHistoryList() {
+  const container = $('history-list');
+  const sortVal = $('history-sort').value;
+  
+  let logs = [...currentHistory];
+  
+  // Apply Sort
+  if (sortVal === 'newest') logs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  else if (sortVal === 'oldest') logs.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  else if (sortVal === 'score_high') logs.sort((a,b) => (b.score?.overall || 0) - (a.score?.overall || 0));
+  else if (sortVal === 'score_low') logs.sort((a,b) => (a.score?.overall || 0) - (b.score?.overall || 0));
+
+  if (logs.length === 0) {
+    container.innerHTML = '<div class="empty-state">No previous sessions recorded. Start practicing to see results.</div>';
+    return;
+  }
+  
+  container.innerHTML = logs.map(l => {
+    const date = new Date(l.created_at).toLocaleDateString();
+    const score = l.score ? l.score.overall : '--';
+    
+    let badgeClass = 'low';
+    let badgeText = 'Developing';
+    if (score >= 90) { badgeClass = 'elite'; badgeText = 'Elite'; }
+    else if (score >= 80) { badgeClass = 'adv'; badgeText = 'Advanced'; }
+    else if (score >= 70) { badgeClass = 'std'; badgeText = 'Standard'; }
+
+    return `
+      <div class="history-item">
+        <div class="h-info">
+          <span class="h-domain">${l.domain}</span>
+          <span class="h-date"><i class="far fa-calendar-alt"></i> ${date}</span>
+        </div>
+        <div class="h-stats">
+           <div class="h-badge ${badgeClass}">${badgeText}</div>
+           <div class="h-score">
+              <span class="lbl">Score</span>
+              <span class="val">${score}</span>
+           </div>
+        </div>
+        <button class="h-btn" onclick="viewDetails('${l.session_id}')">Analysis <i class="fas fa-chevron-right"></i></button>
+      </div>
+    `;
+  }).join('');
+}
+
+// Event Listeners for Filters handled in init
 
 window.viewDetails = async (id) => {
   setLoading(true, 'Fetching detailed archive...');
@@ -390,6 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('welcome');
       } else if (target === 'history') {
         showScreen('history');
+        loadHistory();
       }
     };
   });
@@ -563,6 +604,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initial screen
   showScreen('welcome');
+
+  // History Filter Refresh
+  const historySort = $('history-sort');
+  if (historySort) historySort.onchange = renderHistoryList;
 });
 
 // Update state tracking in addTranscriptEntry
