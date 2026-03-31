@@ -33,13 +33,13 @@ try:
     from backend.scoring_prompt import SCORING_PROMPT
     from backend.interview_manager import InterviewManager, format_session_context
     from backend.database import init_db, get_db, InterviewSessionModel
-    from backend.llm_clients import GroqClient, GeminiClient
+    from backend.llm_clients import GroqClient, GeminiClient, OllamaClient
 except ImportError:
     from prompts import INTERVIEW_PROMPT_BASE, FEEDBACK_PROMPT_BASE, CLARIFY_PROMPT_BASE, SUMMARY_PROMPT_BASE
     from scoring_prompt import SCORING_PROMPT
     from interview_manager import InterviewManager, format_session_context
     from database import init_db, get_db, InterviewSessionModel
-    from llm_clients import GroqClient, GeminiClient
+    from llm_clients import GroqClient, GeminiClient, OllamaClient
 
 
 def clean_key(key: str) -> str:
@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     gemini_api_key1: str = clean_key(os.getenv("GEMINI_API_KEY1", ""))
     groq_model: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
+    ollama_base_url: str = clean_key(os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3")
     host: str = os.getenv("HOST", "0.0.0.0")
     port: int = int(os.getenv("PORT", "8000"))
 
@@ -75,6 +77,7 @@ def check_keys():
     g1, gm = settings.groq_api_key1, settings.gemini_api_key1
     logger.info(f"Groq Key: {'OK (' + g1[:5] + '...)' if g1 else 'MISSING'}")
     logger.info(f"Gemini Key: {'OK (' + gm[:5] + '...)' if gm else 'MISSING'}")
+    logger.info(f"Ollama URL: {settings.ollama_base_url} (Model: {settings.ollama_model})")
 
 
 check_keys()
@@ -139,6 +142,11 @@ async def call_llm(prompt: str, provider: str) -> str:
                 client = GeminiClient(settings.gemini_api_key1, settings.gemini_model)
                 res = await client.get_completion(session, prompt)
                 logger.info("Gemini ✓")
+                return res
+            elif provider == "ollama":
+                client = OllamaClient(settings.ollama_base_url, settings.ollama_model)
+                res = await client.get_completion(session, prompt)
+                logger.info("Ollama ✓")
                 return res
             raise Exception(f"Unknown provider: {provider}")
     except asyncio.TimeoutError:

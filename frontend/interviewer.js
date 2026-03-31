@@ -386,6 +386,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   });
 
+  const providerButtons = document.querySelectorAll('#provider-selector .role-btn');
+  providerButtons.forEach(btn => {
+    btn.onclick = () => {
+      providerButtons.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.provider = btn.dataset.provider;
+    };
+  });
+
   $('start-btn').onclick = () => startInterview(state.domain);
   $('mic-btn').onclick = () => recognition ? recognition.start() : alert('Microphone unavailable.');
   
