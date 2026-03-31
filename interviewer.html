@@ -3,329 +3,192 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Mock Interviewer Pro</title>
-  <meta name="description" content="Practice job interviews with AI-powered real-time feedback and performance analytics.">
-  <meta property="og:title" content="AI Mock Interviewer Pro">
-  <meta property="og:description" content="AI-powered mock interviews with real-time scoring and analytics.">
-  <meta property="og:type" content="website">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <title>Guided Sanctuary | Professional AI Recruitment</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="interviewer.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
-<body>
-<div class="app">
+<body class="light-theme">
 
-  <!-- ═══ HEADER ═══ -->
-  <header>
-    <a class="header-brand" href="#">
-      <div class="brand-icon"><i class="fas fa-brain"></i></div>
-      InterviewAI Pro
-    </a>
-
-    <nav class="header-nav">
-      <button class="nav-btn active" data-screen="welcome">
-        <i class="fas fa-home"></i> Home
-      </button>
-      <button class="nav-btn" data-screen="history">
-        <i class="fas fa-history"></i> History
-      </button>
-    </nav>
-
-    <div class="header-actions">
-      <span class="provider-badge" id="header-provider-badge">GROQ</span>
-      <button class="icon-btn" id="settings-btn" title="Settings">
-        <i class="fas fa-sliders-h"></i>
-      </button>
-    </div>
-
-    <!-- Settings Panel -->
-    <div class="settings-panel" id="settings-panel">
-      <div class="settings-section-title">Voice &amp; Speech</div>
-      <div class="toggle-row">
-        <label for="speech-toggle">Auto-speak questions</label>
-        <label class="toggle">
-          <input type="checkbox" id="speech-toggle">
-          <span class="toggle-track"></span>
-        </label>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="logo">Guided Sanctuary</h1>
+        <nav class="main-nav">
+          <a href="#" class="nav-item">Dashboard</a>
+          <a href="#" class="nav-item active" id="nav-practice">Practice</a>
+          <a href="#" class="nav-item" id="nav-history">History</a>
+          <a href="#" class="nav-item">Support</a>
+        </nav>
       </div>
-      <div class="settings-section-title" style="margin-top:0.75rem;">Voice</div>
-      <select class="settings-select" id="voice-select">
-        <option>Loading voices…</option>
-      </select>
-    </div>
-  </header>
+      <div class="header-right">
+        <button class="icon-btn"><i class="far fa-bell"></i></button>
+        <button class="icon-btn"><i class="fas fa-cog"></i></button>
+      </div>
+    </header>
 
-  <!-- ═══ MAIN ═══ -->
-  <main>
-
-    <!-- ─── WELCOME SCREEN ─── -->
-    <div class="screen active" id="screen-welcome">
-      <div class="welcome-scroll">
-
-        <!-- Hero -->
-        <div class="welcome-hero">
-          <div class="badge-pill">
-            <i class="fas fa-bolt"></i> AI-Powered Interview Coach
-          </div>
-          <h1>Ace Your <span>Next Interview</span></h1>
-          <p>Practice with realistic AI interviewers, get instant feedback and a detailed performance dashboard after every session.</p>
+    <main class="main-content">
+      
+      <!-- Analytics Dashboard Screen (Multi-Interview) -->
+      <div class="screen" id="screen-dashboard-analytics">
+        <div class="analytics-container">
+           <div class="analytics-header">
+              <h2>Growth & Analytics</h2>
+              <p>Visualizing your journey from intern to industry authority.</p>
+           </div>
+           <div class="analytics-grid">
+              <div class="a-card wide">
+                 <span class="lbl">Performance Trend</span>
+                 <div class="chart-hold"><canvas id="progress-line-chart"></canvas></div>
+              </div>
+              <div class="a-card">
+                 <span class="lbl">Skill Proficiency (Avg)</span>
+                 <div class="chart-hold"><canvas id="averages-radar-chart"></canvas></div>
+              </div>
+              <div class="a-card">
+                 <span class="lbl">Interview Frequency</span>
+                 <div class="chart-hold"><canvas id="frequency-bar-chart"></canvas></div>
+              </div>
+           </div>
         </div>
+      </div>
 
-        <!-- Setup Card -->
-        <div class="setup-card">
-
-          <!-- AI Provider -->
-          <div>
-            <div class="setup-label">Choose AI Provider</div>
-            <div class="provider-row">
-              <div class="provider-card selected" data-provider="groq">
-                <div class="p-icon"><i class="fas fa-bolt"></i></div>
-                <div class="p-name">Groq</div>
-                <div class="p-model">Llama 3.3 · Ultra-fast</div>
+      <!-- Welcome Screen -->
+      <div class="screen visible" id="screen-welcome">
+        <div class="welcome-box">
+          <div class="setup-header">
+            <span class="badge">Session Setup</span>
+            <h2>Master Your Next Interview</h2>
+            <p>Elevate your career with Dr. Aris—the leading AI persona in empathetic recruitment.</p>
+          </div>
+          <div class="setup-grid">
+            <div class="setup-card">
+              <label class="field-label">AI Recruiter</label>
+              <div class="persona-option-static">
+                 <img src="ai_recruiter_dr_aris.png" alt="Dr. Aris">
+                 <div class="info">
+                    <span class="p-name">Dr. Aris</span>
+                    <span class="p-role">Senior Talent Acquisition</span>
+                 </div>
               </div>
-              <div class="provider-card" data-provider="gemini">
-                <div class="p-icon"><i class="fas fa-brain"></i></div>
-                <div class="p-name">Gemini</div>
-                <div class="p-model">Flash 1.5 · Advanced</div>
+            </div>
+            <div class="setup-card">
+              <label class="field-label">Select Specialty</label>
+              <div class="role-selector">
+                <button class="role-btn selected" data-domain="Software Engineer">Software Engineer</button>
+                <button class="role-btn" data-domain="Product Manager">Product Manager</button>
+                <button class="role-btn" data-domain="Data Scientist">Data Scientist</button>
               </div>
             </div>
           </div>
-
-          <!-- Domain Dropdown -->
-          <div>
-            <div class="setup-label">Select Interview Domain</div>
-            <div class="domain-row">
-              <div class="field-group" style="flex:2;">
-                <label for="domain-select">Role / Domain</label>
-                <select class="field-select" id="domain-select">
-                  <optgroup label="── Technical ──">
-                    <option value="Software Engineering">Software Engineering</option>
-                    <option value="Frontend Developer">Frontend Developer</option>
-                    <option value="Backend Developer">Backend Developer</option>
-                    <option value="Full-Stack Developer">Full-Stack Developer</option>
-                    <option value="Java & Spring Boot">Java &amp; Spring Boot</option>
-                    <option value="Python Developer">Python Developer</option>
-                    <option value="Data Science / AI ML">Data Science / AI+ML</option>
-                    <option value="DevOps Engineer">DevOps Engineer</option>
-                    <option value="System Design">System Design</option>
-                    <option value="Low-Level Design">Low-Level Design</option>
-                    <option value="Mobile Developer">Mobile Developer</option>
-                    <option value="custom">✏ Enter Custom Domain…</option>
-                  </optgroup>
-                  <optgroup label="── Non-Technical ──">
-                    <option value="Human Resources (HR)">Human Resources (HR)</option>
-                    <option value="Product Management">Product Management</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Sales">Sales</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Operations">Operations</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div class="field-group" id="custom-domain-group" style="display:none; flex:1.2;">
-                <label for="custom-domain-field">Custom Domain</label>
-                <input type="text" class="field-input" id="custom-domain-field" placeholder="e.g. Mechanical Engineering">
-              </div>
-            </div>
-          </div>
-
-          <button class="btn-start" id="start-btn">
-            <i class="fas fa-play-circle"></i> Start Interview
+          <button class="btn-primary" id="start-btn">
+             Start Practice Session <i class="fas fa-arrow-right"></i>
           </button>
-
-        </div>
-
-        <!-- Resume Upload Card -->
-        <div class="setup-card">
-          <div class="setup-label" style="margin-bottom:0;">
-            <i class="fas fa-file-alt" style="color:var(--accent); margin-right:0.4rem;"></i>
-            Upload Resume for a Tailored Interview <span style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0;">(optional)</span>
-          </div>
-
-          <div class="resume-drop" id="resume-drop">
-            <div class="drop-icon"><i class="fas fa-file-upload"></i></div>
-            <p>Click or drag &amp; drop your resume here</p>
-            <p style="font-size:0.75rem; margin-top:0.3rem; color:var(--text-muted);">PDF or DOCX · Max 10 MB</p>
-            <div class="file-name" id="resume-file-name" style="display:none;"></div>
-            <input type="file" id="resume-file-input" accept=".pdf,.docx">
-          </div>
-
-          <div id="resume-domain-row" style="display:none;">
-            <div class="field-group">
-              <label for="resume-domain-input">Target Role (for resume-tailored questions)</label>
-              <input type="text" class="field-input" id="resume-domain-input" placeholder="e.g. Senior Frontend Engineer at Google">
-            </div>
-            <button class="btn-start" id="resume-start-btn" style="margin-top:0.875rem;">
-              <i class="fas fa-play-circle"></i> Start Tailored Interview
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div><!-- /welcome -->
-
-    <!-- ─── INTERVIEW SCREEN ─── -->
-    <div class="screen" id="screen-interview">
-
-      <!-- Chat Panel -->
-      <div class="interview-chat">
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="typing-indicator" id="typing-indicator">
-          <span></span><span></span><span></span>
-        </div>
-
-        <!-- Input -->
-        <div class="chat-input-area">
-          <div class="input-box">
-            <textarea id="user-input" placeholder="Type your answer… (Enter to send, Shift+Enter for new line)" rows="1"></textarea>
-            <div class="input-actions">
-              <button class="act-btn secondary" id="mic-btn" title="Voice input">
-                <i class="fas fa-microphone"></i>
-              </button>
-              <button class="act-btn primary-action" id="send-btn" title="Send answer">
-                <i class="fas fa-paper-plane"></i>
-              </button>
-            </div>
-          </div>
-          <div class="input-hints">
-            <button class="hint-btn" id="hint-clarify"><i class="fas fa-question-circle"></i> Clarify</button>
-            <button class="hint-btn" id="hint-repeat"><i class="fas fa-redo"></i> Repeat</button>
-            <button class="hint-btn" id="hint-feedback"><i class="fas fa-star"></i> Get Feedback</button>
-          </div>
         </div>
       </div>
 
-      <!-- Sidebar -->
-      <aside class="interview-sidebar">
-        <div class="sidebar-card">
-          <div class="sidebar-card-title">Session Info</div>
-          <div class="stat-row"><span class="stat-label">Domain</span><span class="stat-value accent" id="stat-domain">—</span></div>
-          <div class="stat-row"><span class="stat-label">Provider</span><span class="stat-value" id="stat-provider">—</span></div>
-          <div class="stat-row"><span class="stat-label">Questions</span><span class="stat-value accent" id="stat-questions">0</span></div>
-          <div class="stat-row"><span class="stat-label">Stage</span><span class="stage-pill basic" id="stat-stage">Basic</span></div>
-          <div class="stat-row"><span class="stat-label">Time</span><span class="stat-value" id="elapsed-timer">00:00</span></div>
+      <!-- Interview Screen -->
+      <div class="screen" id="screen-interview">
+        <div class="meeting-layout">
+           <div class="meeting-stage">
+              <div class="session-meta">
+                 <span class="session-label" id="stat-role-info">SESSION ACTIVE • ROLE: SOFTWARE ENGINEER</span>
+                 <h2>Interview with Dr. Aris AI</h2>
+              </div>
+              <div class="video-stage">
+                 <img src="ai_recruiter_dr_aris.png" alt="Interviewer" class="ai-bg">
+                 <div class="speaking-indicator" id="speaking-pill">
+                    <div class="pulse-dot"></div><span>Interviewer is Speaking...</span>
+                 </div>
+                 <!-- User PiP -->
+                 <div class="user-pip-frame" id="cam-panel">
+                    <video id="cam-video" autoplay muted playsinline></video>
+                    <canvas id="cam-canvas"></canvas>
+                 </div>
+              </div>
+              <div class="latest-card">
+                 <div class="icon"><i class="fas fa-quote-left"></i></div>
+                 <div class="content">
+                    <span class="lbl">LATEST QUESTION</span>
+                    <p id="current-question-text">Listening for session start...</p>
+                 </div>
+              </div>
+           </div>
+           <!-- Sidebar -->
+           <aside class="interviewer-sidebar">
+              <div class="transcript-card">
+                 <div class="card-header"><h3>Live Transcript</h3><span class="rec-dot"></span></div>
+                 <div class="transcript-body" id="chat-messages"></div>
+              </div>
+           </aside>
         </div>
-
-        <div class="sidebar-card">
-          <div class="sidebar-card-title">Quick Actions</div>
-          <div style="display:flex;flex-direction:column;gap:0.5rem;">
-            <button class="sidebar-btn" id="sidebar-clarify"><i class="fas fa-question-circle"></i> Clarify Question</button>
-            <button class="sidebar-btn" id="sidebar-repeat"><i class="fas fa-redo"></i> Repeat Question</button>
-            <button class="sidebar-btn end" id="sidebar-end"><i class="fas fa-flag-checkered"></i> End &amp; See Results</button>
-          </div>
-        </div>
-
-        <div class="sidebar-card" style="flex:1;overflow-y:auto;">
-          <div class="sidebar-card-title">Interview Tips</div>
-          <ul class="fb-list" style="padding:0;list-style:none;">
-            <li>Use the STAR method (Situation, Task, Action, Result).</li>
-            <li>Be specific — mention numbers, tools, and outcomes.</li>
-            <li>Click <strong>Clarify</strong> if a question seems unclear.</li>
-            <li>Click <strong>Get Feedback</strong> for instant coaching.</li>
-          </ul>
-        </div>
-      </aside>
-    </div><!-- /interview -->
-
-    <!-- ─── DASHBOARD SCREEN ─── -->
-    <div class="screen" id="screen-dashboard">
-      <div class="dashboard-scroll">
-
-        <!-- Header -->
-        <div class="dashboard-header">
-          <div>
-            <h2><i class="fas fa-chart-bar" style="color:var(--accent);margin-right:0.5rem;"></i>Performance Report</h2>
-            <div class="meta" id="dash-meta">—</div>
-          </div>
-          <div class="dash-actions">
-            <button class="btn-secondary" id="dash-history-btn"><i class="fas fa-history"></i> History</button>
-            <button class="btn-start" id="dash-new-btn" style="width:auto;padding:0.6rem 1.25rem;"><i class="fas fa-plus"></i> New Interview</button>
-          </div>
-        </div>
-
-        <!-- Top row: Overall Badge + Charts -->
-        <div class="charts-row">
-
-          <!-- Overall score -->
-          <div class="overall-card">
-            <div class="overall-label">Overall Score</div>
-            <div class="overall-badge mid" id="dash-overall-badge">—</div>
-            <div class="overall-sub">out of 100</div>
-            <div style="margin-top:1.25rem;">
-              <div class="setup-label" style="margin-bottom:0.75rem;">✅ Key Strengths</div>
-              <ul class="fb-list" id="dash-strengths"><li>Generating…</li></ul>
-            </div>
-            <div style="margin-top:1rem;">
-              <div class="setup-label" style="margin-bottom:0.75rem;">📈 Improve On</div>
-              <ul class="fb-list improve" id="dash-improvements"><li>Generating…</li></ul>
-            </div>
-          </div>
-
-          <!-- Charts panel -->
-          <div class="charts-panel">
-            <div class="chart-card">
-              <div class="chart-title">Skill Radar</div>
-              <div class="chart-wrap"><canvas id="radar-chart"></canvas></div>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">Score Breakdown</div>
-              <div class="chart-wrap bar-wrap"><canvas id="bar-chart"></canvas></div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Assessment -->
-        <div class="summary-card">
-          <div class="summary-card-title"><i class="fas fa-file-alt"></i> Detailed Assessment</div>
-          <div class="summary-body" id="dash-summary">Loading…</div>
-        </div>
-
-      </div>
-    </div><!-- /dashboard -->
-
-
-    <!-- ─── HISTORY SCREEN ─── -->
-    <div class="screen" id="screen-history">
-      <div class="history-wrap">
-        <div class="history-header">
-          <h2><i class="fas fa-history" style="color:var(--accent);margin-right:0.5rem;"></i>Interview History</h2>
-          <p>All completed mock interviews with scores and detailed reports.</p>
-        </div>
-        <div class="history-table-wrap">
-          <table class="history-table">
-            <thead>
-              <tr>
-                <th>Domain</th>
-                <th>Date</th>
-                <th>Questions</th>
-                <th>Score</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody id="history-body">
-              <tr><td colspan="5"><div class="history-empty"><i class="fas fa-history"></i>No interviews yet. Start one from the Home screen!</div></td></tr>
-            </tbody>
-          </table>
+        <!-- Controls -->
+        <div class="controls-overlay">
+           <button class="control-btn mic" id="mic-btn"><i class="fas fa-microphone"></i></button>
+           <button class="control-btn" id="cam-toggle"><i class="fas fa-video"></i></button>
+           <div class="divider"></div>
+           <button class="control-btn end" id="sidebar-end">End Interview</button>
         </div>
       </div>
-    </div><!-- /history -->
 
-  </main>
-</div>
+      <!-- Dashboard Screen -->
+      <div class="screen" id="screen-dashboard">
+        <div class="dashboard-centered">
+           <div class="dash-card">
+              <div class="dash-header">
+                 <h2>Performance Assessment</h2>
+                 <button class="btn-reset" onclick="location.reload()">Start New Session</button>
+              </div>
+              <div class="dash-grid-stats">
+                 <div class="score-circle">
+                    <span class="lbl">Overall score</span>
+                    <div class="score-val" id="dash-overall-badge">--</div>
+                 </div>
+                 <div class="chart-box"><canvas id="radar-chart"></canvas></div>
+              </div>
+              <div class="dash-summary-box">
+                 <div class="lbl">Detailed Analysis</div>
+                 <div class="summary-content" id="dash-summary">Synthesizing final feedback...</div>
+              </div>
+           </div>
+        </div>
+      </div>
 
-<!-- Loading Overlay -->
-<div id="loading-overlay">
-  <div class="spinner"></div>
-  <div class="loading-text">Processing…</div>
-</div>
+      <!-- History Screen -->
+      <div class="screen" id="screen-history">
+         <div class="history-container">
+            <div class="history-header">
+               <h2>Interview History</h2>
+               <p>Revisit your past performances and track your career growth.</p>
+            </div>
+            <div class="history-body" id="history-list">
+               <!-- History items here -->
+            </div>
+         </div>
+      </div>
 
-<!-- Toast -->
-<div id="toast"></div>
+    </main>
 
-<script src="interviewer.js"></script>
+    <footer class="minimal-footer">
+       <span>Guided Sanctuary 2024</span>
+       <div class="links">
+          <a href="#">Privacy</a> <a href="#">Ethical AI</a> <a href="#">Support</a>
+       </div>
+    </footer>
+  </div>
+
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Processing...</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.1/markdown-it.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
+  <script src="camera.js"></script>
+  <script src="interviewer.js"></script>
 </body>
 </html>
