@@ -96,7 +96,6 @@ async function startInterview(domain) {
     state.questionCount = 1;
     
     showScreen('interview');
-    $('stat-domain').textContent = domain.toUpperCase();
     $('stat-role-info').textContent = `SESSION ACTIVE • ROLE: ${domain.toUpperCase()}`;
     $('chat-messages').innerHTML = ''; 
     
@@ -114,17 +113,21 @@ function addTranscriptEntry(speaker, text) {
   const row = document.createElement('div');
   row.className = `msg-row ${speaker === 'interviewer' ? 'ai' : 'user'}`;
   
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const label = speaker === 'interviewer' ? 'DR. ARIS' : 'YOU';
+  const label = speaker === 'interviewer' ? 'Dr. Aris' : 'You';
+  const icon = speaker === 'interviewer' ? 'fa-robot' : 'fa-user';
+  const color = speaker === 'interviewer' ? 'var(--primary)' : '#fff';
   
-  row.innerHTML = `<div class="msg-meta">${label} <span class="time">${time}</span></div><div class="msg-text">${text}</div>`;
+  row.innerHTML = `
+    <div class="msg-meta"><i class="fas ${icon}" style="color: ${color}; font-size: 0.8rem; margin-right: 4px;"></i> ${label}</div>
+    <div class="msg-text">${text}</div>
+  `;
+  
   container.appendChild(row);
   container.scrollTop = container.scrollHeight;
 
   if (speaker === 'interviewer') {
-    $('current-question-text').textContent = text;
+    $('current-question-text').innerHTML = `<b>${text}</b>`;
     speak(text);
-    // Camera feed check
     $('cam-panel').style.display = 'block';
     CameraModule.start();
   }
@@ -191,15 +194,24 @@ function renderDashboard(score, summary) {
       datasets: [{
         label: 'Aptitude Profile',
         data: [s.communication, s.technical, s.confidence],
-        backgroundColor: 'rgba(90, 103, 216, 0.1)',
-        borderColor: '#5a67d8',
-        borderWidth: 2,
-        pointBackgroundColor: '#5a67d8',
+        backgroundColor: 'rgba(161, 141, 255, 0.2)',
+        borderColor: '#a18dff',
+        borderWidth: 3,
+        pointBackgroundColor: '#7d5fff',
+        pointRadius: 5
       }]
     },
     options: {
-      scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } },
-      plugins: { legend: { display: false } }
+      scales: { 
+        r: { 
+          min: 0, max: 100, 
+          ticks: { display: false },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          angleLines: { color: 'rgba(0,0,0,0.05)' }
+        } 
+      },
+      plugins: { legend: { display: false } },
+      animation: { duration: 2000, easing: 'easeOutQuart' }
     }
   });
 }
@@ -376,22 +388,103 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   });
 
-  // Start Screen UI
-  const roleButtons = document.querySelectorAll('.role-btn');
-  roleButtons.forEach(btn => {
-    btn.onclick = () => {
-      roleButtons.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      state.domain = btn.dataset.domain;
-    };
-  });
+  const updateSteps = (n) => {
+    document.querySelectorAll('.step').forEach((s, i) => {
+      s.classList.toggle('active', i < n);
+    });
+  };
 
+  // Role Suggestion Database
+  const ROLES = [
+    { name: "Software Engineer", type: "Technical" },
+    { name: "Data Scientist", type: "Technical" },
+    { name: "Product Manager", type: "Non-Technical" },
+    { name: "Cloud Architect", type: "Technical" },
+    { name: "Cybersecurity Analyst", type: "Technical" },
+    { name: "DevOps Engineer", type: "Technical" },
+    { name: "Full Stack Developer", type: "Technical" },
+    { name: "AI/ML Engineer", type: "Technical" },
+    { name: "UX/UI Designer", type: "Non-Technical" },
+    { name: "Human Resources", type: "Non-Technical" },
+    { name: "Sales Executive", type: "Non-Technical" },
+    { name: "Marketing Lead", type: "Non-Technical" },
+    { name: "Operations Manager", type: "Non-Technical" },
+    { name: "Project Coordinator", type: "Non-Technical" },
+    { name: "Financial Analyst", type: "Non-Technical" }
+  ];
+
+  const roleSearch = $('role-search');
+  const roleDropdown = $('role-dropdown');
+
+  const renderSuggestions = (filter = '') => {
+    if (!roleDropdown) return;
+    roleDropdown.innerHTML = '';
+    
+    if (!filter) {
+      roleDropdown.style.display = 'none';
+      return;
+    }
+
+    const filtered = ROLES.filter(r => 
+      r.name.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    if (filtered.length > 0) {
+      roleDropdown.style.display = 'flex';
+      filtered.forEach((role, idx) => {
+        const item = document.createElement('div');
+        item.className = `dropdown-item ${idx === 0 ? 'active' : ''}`;
+        item.innerHTML = `
+          <span class="d-name">${role.name}</span>
+          <span class="d-type">${role.type}</span>
+        `;
+        item.onclick = () => {
+          state.domain = role.name;
+          roleSearch.value = role.name;
+          roleDropdown.style.display = 'none';
+        };
+        roleDropdown.appendChild(item);
+      });
+    } else {
+      roleDropdown.style.display = 'none';
+    }
+  };
+
+  if (roleSearch) {
+    roleSearch.oninput = (e) => {
+      state.domain = e.target.value;
+      renderSuggestions(e.target.value);
+    };
+
+    roleSearch.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        const activeItem = roleDropdown.querySelector('.dropdown-item.active');
+        if (activeItem) {
+          const roleName = activeItem.querySelector('.d-name').innerText;
+          state.domain = roleName;
+          roleSearch.value = roleName;
+        }
+        roleDropdown.style.display = 'none';
+        roleSearch.blur();
+      }
+    };
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+      if (!roleSearch.contains(e.target) && !roleDropdown.contains(e.target)) {
+        roleDropdown.style.display = 'none';
+      }
+    });
+  }
+
+  // Start Screen UI - AI Provider
   const providerButtons = document.querySelectorAll('#provider-selector .role-btn');
   providerButtons.forEach(btn => {
     btn.onclick = () => {
       providerButtons.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       state.provider = btn.dataset.provider;
+      updateSteps(3);
     };
   });
 
@@ -443,7 +536,18 @@ document.addEventListener('DOMContentLoaded', () => {
     else CameraModule.stop();
   };
 
-  $('sidebar-end').onclick = endInterview;
+  $('sidebar-end').onclick = () => {
+    $('modal-confirm-end').style.display = 'flex';
+  };
+  
+  $('btn-cancel-end').onclick = () => {
+    $('modal-confirm-end').style.display = 'none';
+  };
+  
+  $('btn-confirm-end').onclick = () => {
+    $('modal-confirm-end').style.display = 'none';
+    endInterview();
+  };
   
   CameraModule.init({});
   
