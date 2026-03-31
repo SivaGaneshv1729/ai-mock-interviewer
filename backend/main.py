@@ -33,13 +33,13 @@ try:
     from backend.scoring_prompt import SCORING_PROMPT
     from backend.interview_manager import InterviewManager, format_session_context
     from backend.database import init_db, get_db, InterviewSessionModel
-    from backend.llm_clients import GroqClient, GeminiClient
+    from backend.llm_clients import GroqClient, GeminiClient, OllamaClient
 except ImportError:
     from prompts import INTERVIEW_PROMPT_BASE, FEEDBACK_PROMPT_BASE, CLARIFY_PROMPT_BASE, SUMMARY_PROMPT_BASE
     from scoring_prompt import SCORING_PROMPT
     from interview_manager import InterviewManager, format_session_context
     from database import init_db, get_db, InterviewSessionModel
-    from llm_clients import GroqClient, GeminiClient
+    from llm_clients import GroqClient, GeminiClient, OllamaClient
 
 
 def clean_key(key: str) -> str:
@@ -49,13 +49,26 @@ def clean_key(key: str) -> str:
 
 
 class Settings(BaseSettings):
-    groq_api_key1: str = clean_key(os.getenv("GROQ_API_KEY1", ""))
-    groq_api_key2: str = clean_key(os.getenv("GROQ_API_KEY2", ""))
-    gemini_api_key1: str = clean_key(os.getenv("GEMINI_API_KEY1", ""))
-    groq_model: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
-    host: str = os.getenv("HOST", "0.0.0.0")
-    port: int = int(os.getenv("PORT", "8000"))
+    groq_api_key1: str = ""
+    groq_api_key2: str = ""
+    gemini_api_key1: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
+    gemini_model: str = "gemini-2.5-flash"
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3"
+    host: str = "0.0.0.0"
+    port: int = 8000
+
+    class Config:
+        case_sensitive = False
+        env_file = ".env"
+        extra = "allow"
+
+    def model_post_init(self, __context):
+        self.groq_api_key1 = clean_key(self.groq_api_key1)
+        self.groq_api_key2 = clean_key(self.groq_api_key2)
+        self.gemini_api_key1 = clean_key(self.gemini_api_key1)
+        self.ollama_base_url = clean_key(self.ollama_base_url)
 
 
 from fastapi.responses import FileResponse
@@ -75,6 +88,7 @@ def check_keys():
     g1, gm = settings.groq_api_key1, settings.gemini_api_key1
     logger.info(f"Groq Key: {'OK (' + g1[:5] + '...)' if g1 else 'MISSING'}")
     logger.info(f"Gemini Key: {'OK (' + gm[:5] + '...)' if gm else 'MISSING'}")
+    logger.info(f"Ollama URL: {settings.ollama_base_url} (Model: {settings.ollama_model})")
 
 
 check_keys()
@@ -86,12 +100,11 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False,
 # Serve frontend files
 # The project root is one level up from the 'backend' directory
 project_root = os.path.dirname(current_dir)
+frontend_dir = os.path.join(project_root, "frontend")
 
 @app.get("/")
 async def read_index():
-    return FileResponse(os.path.join(project_root, "interviewer.html"))
-
-    return FileResponse(os.path.join(project_root, "interviewer.html"))
+    return FileResponse(os.path.join(frontend_dir, "interviewer.html"))
 
 
 @app.middleware("http")
@@ -140,6 +153,11 @@ async def call_llm(prompt: str, provider: str) -> str:
                 client = GeminiClient(settings.gemini_api_key1, settings.gemini_model)
                 res = await client.get_completion(session, prompt)
                 logger.info("Gemini ✓")
+                return res
+            elif provider == "ollama":
+                client = OllamaClient(settings.ollama_base_url, settings.ollama_model)
+                res = await client.get_completion(session, prompt)
+                logger.info("Ollama ✓")
                 return res
             raise Exception(f"Unknown provider: {provider}")
     except asyncio.TimeoutError:
@@ -360,17 +378,12 @@ async def get_session_detail(session_id: str):
 
 
 # ── Frontend Static Serving (Must be last) ──
-@app.get("/")
-async def read_index():
-    return FileResponse(os.path.join(project_root, "interviewer.html"))
-
-
 @app.get("/interviewer_app")
 async def read_interviewer_app():
-    return FileResponse(os.path.join(project_root, "interviewer.html"))
+    return FileResponse(os.path.join(frontend_dir, "interviewer.html"))
 
 
-app.mount("/", StaticFiles(directory=project_root), name="static")
+app.mount("/", StaticFiles(directory=frontend_dir), name="static")
 
 
 if __name__ == "__main__":

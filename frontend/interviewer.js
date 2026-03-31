@@ -386,8 +386,63 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   });
 
+  const providerButtons = document.querySelectorAll('#provider-selector .role-btn');
+  providerButtons.forEach(btn => {
+    btn.onclick = () => {
+      providerButtons.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.provider = btn.dataset.provider;
+    };
+  });
+
   $('start-btn').onclick = () => startInterview(state.domain);
   $('mic-btn').onclick = () => recognition ? recognition.start() : alert('Microphone unavailable.');
+  
+  // New Interactive Buttons
+  $('repeat-btn').onclick = () => {
+    if (state.lastQuestion) {
+       speak(state.lastQuestion);
+       addTranscriptEntry('interviewer', `<i>(Repeating)</i> ${state.lastQuestion}`);
+    }
+  };
+
+  $('clarify-btn').onclick = async () => {
+    if (!state.sessionId) return;
+    setLoading(true, 'Asking Dr. Aris for clarification...');
+    try {
+      const data = await apiFetch('/api/interview/clarify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: state.sessionId })
+      });
+      addTranscriptEntry('interviewer', data.reply);
+    } catch (e) { alert(e.message); }
+    setLoading(false);
+  };
+
+  $('feedback-btn').onclick = async () => {
+    if (!state.sessionId) return;
+    setLoading(true, 'Retrieving mid-interview coaching...');
+    try {
+      const data = await apiFetch('/api/interview/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: state.sessionId })
+      });
+      addTranscriptEntry('interviewer', `<b>Coaching:</b> ${data.reply}`);
+    } catch (e) { alert(e.message); }
+    setLoading(false);
+  };
+
+  let camOn = true;
+  $('cam-toggle').onclick = () => {
+    camOn = !camOn;
+    $('cam-toggle').classList.toggle('active', camOn);
+    $('cam-panel').style.opacity = camOn ? '1' : '0';
+    if (camOn) CameraModule.start();
+    else CameraModule.stop();
+  };
+
   $('sidebar-end').onclick = endInterview;
   
   CameraModule.init({});
@@ -395,3 +450,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial screen
   showScreen('welcome');
 });
+
+// Update state tracking in addTranscriptEntry
+const originalAddTranscriptEntry = addTranscriptEntry;
+addTranscriptEntry = (speaker, text) => {
+  if (speaker === 'interviewer') state.lastQuestion = text;
+  originalAddTranscriptEntry(speaker, text);
+};
