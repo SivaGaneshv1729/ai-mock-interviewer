@@ -484,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
       providerButtons.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       state.provider = btn.dataset.provider;
-      updateSteps(3);
     };
   });
 
