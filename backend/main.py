@@ -86,12 +86,11 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False,
 # Serve frontend files
 # The project root is one level up from the 'backend' directory
 project_root = os.path.dirname(current_dir)
+frontend_dir = os.path.join(project_root, "frontend")
 
 @app.get("/")
 async def read_index():
-    return FileResponse(os.path.join(project_root, "interviewer.html"))
-
-    return FileResponse(os.path.join(project_root, "interviewer.html"))
+    return FileResponse(os.path.join(frontend_dir, "interviewer.html"))
 
 
 @app.middleware("http")
@@ -360,17 +359,12 @@ async def get_session_detail(session_id: str):
 
 
 # ── Frontend Static Serving (Must be last) ──
-@app.get("/")
-async def read_index():
-    return FileResponse(os.path.join(project_root, "interviewer.html"))
-
-
 @app.get("/interviewer_app")
 async def read_interviewer_app():
-    return FileResponse(os.path.join(project_root, "interviewer.html"))
+    return FileResponse(os.path.join(frontend_dir, "interviewer.html"))
 
 
-app.mount("/", StaticFiles(directory=project_root), name="static")
+app.mount("/", StaticFiles(directory=frontend_dir), name="static")
 
 
 if __name__ == "__main__":
