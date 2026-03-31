@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="interviewer.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -233,6 +234,7 @@
     <div class="screen" id="screen-dashboard">
       <div class="dashboard-scroll">
 
+        <!-- Header -->
         <div class="dashboard-header">
           <div>
             <h2><i class="fas fa-chart-bar" style="color:var(--accent);margin-right:0.5rem;"></i>Performance Report</h2>
@@ -244,70 +246,47 @@
           </div>
         </div>
 
-        <!-- Gauges -->
-        <div class="gauge-grid">
-          <div class="gauge-card">
-            <div class="gauge-wrap" id="gauge-overall">
-              <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
-                <circle class="gauge-track" cx="44" cy="44" r="36"/>
-                <circle class="gauge-fill" cx="44" cy="44" r="36" stroke-dasharray="226" stroke-dashoffset="226"/>
-              </svg>
-              <div class="gauge-value">–<span>/ 100</span></div>
+        <!-- Top row: Overall Badge + Charts -->
+        <div class="charts-row">
+
+          <!-- Overall score -->
+          <div class="overall-card">
+            <div class="overall-label">Overall Score</div>
+            <div class="overall-badge mid" id="dash-overall-badge">—</div>
+            <div class="overall-sub">out of 100</div>
+            <div style="margin-top:1.25rem;">
+              <div class="setup-label" style="margin-bottom:0.75rem;">✅ Key Strengths</div>
+              <ul class="fb-list" id="dash-strengths"><li>Generating…</li></ul>
             </div>
-            <div class="gauge-label">Overall Score</div>
-          </div>
-          <div class="gauge-card">
-            <div class="gauge-wrap" id="gauge-communication">
-              <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
-                <circle class="gauge-track" cx="44" cy="44" r="36"/>
-                <circle class="gauge-fill" cx="44" cy="44" r="36" stroke-dasharray="226" stroke-dashoffset="226"/>
-              </svg>
-              <div class="gauge-value">–<span>/ 100</span></div>
+            <div style="margin-top:1rem;">
+              <div class="setup-label" style="margin-bottom:0.75rem;">📈 Improve On</div>
+              <ul class="fb-list improve" id="dash-improvements"><li>Generating…</li></ul>
             </div>
-            <div class="gauge-label">Communication</div>
           </div>
-          <div class="gauge-card">
-            <div class="gauge-wrap" id="gauge-technical">
-              <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
-                <circle class="gauge-track" cx="44" cy="44" r="36"/>
-                <circle class="gauge-fill" cx="44" cy="44" r="36" stroke-dasharray="226" stroke-dashoffset="226"/>
-              </svg>
-              <div class="gauge-value">–<span>/ 100</span></div>
+
+          <!-- Charts panel -->
+          <div class="charts-panel">
+            <div class="chart-card">
+              <div class="chart-title">Skill Radar</div>
+              <div class="chart-wrap"><canvas id="radar-chart"></canvas></div>
             </div>
-            <div class="gauge-label">Technical</div>
-          </div>
-          <div class="gauge-card">
-            <div class="gauge-wrap" id="gauge-confidence">
-              <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
-                <circle class="gauge-track" cx="44" cy="44" r="36"/>
-                <circle class="gauge-fill" cx="44" cy="44" r="36" stroke-dasharray="226" stroke-dashoffset="226"/>
-              </svg>
-              <div class="gauge-value">–<span>/ 100</span></div>
+            <div class="chart-card">
+              <div class="chart-title">Score Breakdown</div>
+              <div class="chart-wrap bar-wrap"><canvas id="bar-chart"></canvas></div>
             </div>
-            <div class="gauge-label">Confidence</div>
           </div>
+
         </div>
 
-        <!-- Strengths / Improvements -->
-        <div class="feedback-row">
-          <div class="fb-card strengths">
-            <div class="fb-title"><i class="fas fa-check-circle"></i> Key Strengths</div>
-            <ul class="fb-list" id="dash-strengths"><li>Generating…</li></ul>
-          </div>
-          <div class="fb-card improvements">
-            <div class="fb-title"><i class="fas fa-arrow-up"></i> Areas to Improve</div>
-            <ul class="fb-list" id="dash-improvements"><li>Generating…</li></ul>
-          </div>
-        </div>
-
-        <!-- Full summary -->
+        <!-- Assessment -->
         <div class="summary-card">
-          <h3><i class="fas fa-file-alt"></i> Detailed Assessment</h3>
-          <div class="summary-body" id="dash-summary">Loading summary…</div>
+          <div class="summary-card-title"><i class="fas fa-file-alt"></i> Detailed Assessment</div>
+          <div class="summary-body" id="dash-summary">Loading…</div>
         </div>
 
       </div>
     </div><!-- /dashboard -->
+
 
     <!-- ─── HISTORY SCREEN ─── -->
     <div class="screen" id="screen-history">
