@@ -80,20 +80,26 @@ function initSTT() {
 
 // ── Interview Lifecycle ──
 async function startInterview(domain) {
-  setLoading(true, 'Setting up your interview room...');
-  state.domain = domain;
-  state.questionCount = 0;
+  if (!domain) { alert("Please select or define a target role."); return; }
+  setLoading(true, "Preparing your AI panel...");
   
   try {
     const fd = new FormData();
     fd.append('domain', domain);
-    fd.append('model_provider', state.provider);
+    fd.append('model_provider', state.provider || 'gemini');
+    if (state.resumeFile) {
+      fd.append('resume', state.resumeFile);
+    }
 
-    const data = await apiFetch('/api/interview/start', { method: 'POST', body: fd });
+    const data = await apiFetch('/api/interview/start', {
+      method: 'POST',
+      body: fd
+    });
     
     state.sessionId = data.session_id;
     state.inInterview = true;
     state.questionCount = 1;
+    state.lastQuestion = data.reply;
     
     showScreen('interview');
     $('stat-role-info').textContent = `SESSION ACTIVE • ROLE: ${domain.toUpperCase()}`;
@@ -394,98 +400,81 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  // Role Suggestion Database
-  const ROLES = [
-    { name: "Software Engineer", type: "Technical" },
-    { name: "Data Scientist", type: "Technical" },
-    { name: "Product Manager", type: "Non-Technical" },
-    { name: "Cloud Architect", type: "Technical" },
-    { name: "Cybersecurity Analyst", type: "Technical" },
-    { name: "DevOps Engineer", type: "Technical" },
-    { name: "Full Stack Developer", type: "Technical" },
-    { name: "AI/ML Engineer", type: "Technical" },
-    { name: "UX/UI Designer", type: "Non-Technical" },
-    { name: "Human Resources", type: "Non-Technical" },
-    { name: "Sales Executive", type: "Non-Technical" },
-    { name: "Marketing Lead", type: "Non-Technical" },
-    { name: "Operations Manager", type: "Non-Technical" },
-    { name: "Project Coordinator", type: "Non-Technical" },
-    { name: "Financial Analyst", type: "Non-Technical" }
-  ];
+  // Redesigned Role Logic 2.0
+  const categorySelect = $('category-select');
+  const roleSelect = $('role-select');
+  const customRoleContainer = $('custom-role-container');
+  const customRoleInput = $('custom-role-input');
+  
+  const ROLES_MAP = {
+    "Technical": [
+      "Software Engineer", "Frontend Developer", "Backend Developer", 
+      "Data Scientist", "DevOps Engineer", "Cloud Architect", 
+      "AI/ML Engineer", "Cybersecurity Analyst", "Mobile Developer"
+    ],
+    "Non-Technical": [
+      "Product Manager", "HR Manager", "Marketing Lead", 
+      "Sales Executive", "Project Manager", "UX Designer", 
+      "Financial Analyst", "Operations Manager", "Content Specialist"
+    ]
+  };
 
-  const roleSearch = $('role-search');
-  const roleDropdown = $('role-dropdown');
+  const populateRoles = (cat) => {
+    roleSelect.innerHTML = `<option value="" disabled selected>Select Target Role</option>`;
+    roleSelect.innerHTML += ROLES_MAP[cat].map(r => `<option value="${r}">${r}</option>`).join('');
+    roleSelect.innerHTML += `<option value="Other">Other / Custom Persona...</option>`;
+    updateRoleState();
+  };
 
-  const renderSuggestions = (filter = '') => {
-    if (!roleDropdown) return;
-    roleDropdown.innerHTML = '';
-    
-    if (!filter) {
-      roleDropdown.style.display = 'none';
-      return;
-    }
-
-    const filtered = ROLES.filter(r => 
-      r.name.toLowerCase().includes(filter.toLowerCase())
-    );
-
-    if (filtered.length > 0) {
-      roleDropdown.style.display = 'flex';
-      filtered.forEach((role, idx) => {
-        const item = document.createElement('div');
-        item.className = `dropdown-item ${idx === 0 ? 'active' : ''}`;
-        item.innerHTML = `
-          <span class="d-name">${role.name}</span>
-          <span class="d-type">${role.type}</span>
-        `;
-        item.onclick = () => {
-          state.domain = role.name;
-          roleSearch.value = role.name;
-          roleDropdown.style.display = 'none';
-        };
-        roleDropdown.appendChild(item);
-      });
+  const updateRoleState = () => {
+    if (roleSelect.value === 'Other') {
+      customRoleContainer.style.display = 'block';
+      state.domain = customRoleInput.value;
     } else {
-      roleDropdown.style.display = 'none';
+      customRoleContainer.style.display = 'none';
+      state.domain = roleSelect.value;
     }
   };
 
-  if (roleSearch) {
-    roleSearch.oninput = (e) => {
-      state.domain = e.target.value;
-      renderSuggestions(e.target.value);
-    };
+  categorySelect.onchange = () => populateRoles(categorySelect.value);
+  roleSelect.onchange = updateRoleState;
+  customRoleInput.oninput = updateRoleState;
 
-    roleSearch.onkeydown = (e) => {
-      if (e.key === 'Enter') {
-        const activeItem = roleDropdown.querySelector('.dropdown-item.active');
-        if (activeItem) {
-          const roleName = activeItem.querySelector('.d-name').innerText;
-          state.domain = roleName;
-          roleSearch.value = roleName;
-        }
-        roleDropdown.style.display = 'none';
-        roleSearch.blur();
-      }
-    };
+  // Initialize - Clear role select until category is picked
+  roleSelect.innerHTML = `<option value="" disabled selected>Select Target Role</option>`;
+  state.provider = 'gemini'; // Assigned internally as per request
 
-    // Close dropdown on click outside
-    document.addEventListener('click', (e) => {
-      if (!roleSearch.contains(e.target) && !roleDropdown.contains(e.target)) {
-        roleDropdown.style.display = 'none';
-      }
-    });
-  }
+  // Resume Upload Logic
+  const resumeUpload = $('resume-upload');
+  const resumeDropzone = $('resume-dropzone');
+  const fileInfo = $('file-info');
+  const filenameText = $('filename-text');
 
-  // Start Screen UI - AI Provider
-  const providerButtons = document.querySelectorAll('#provider-selector .role-btn');
-  providerButtons.forEach(btn => {
-    btn.onclick = () => {
-      providerButtons.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      state.provider = btn.dataset.provider;
-    };
-  });
+  resumeDropzone.onclick = () => resumeUpload.click();
+  
+  resumeUpload.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      state.resumeFile = file;
+      filenameText.textContent = file.name;
+      fileInfo.style.display = 'flex';
+      resumeDropzone.style.borderColor = '#10b981';
+    }
+  };
+
+  // Drag and Drop
+  resumeDropzone.ondragover = (e) => { e.preventDefault(); resumeDropzone.style.borderColor = 'var(--primary)'; };
+  resumeDropzone.ondragleave = () => { resumeDropzone.style.borderColor = 'var(--border)'; };
+  resumeDropzone.ondrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      state.resumeFile = file;
+      filenameText.textContent = file.name;
+      fileInfo.style.display = 'flex';
+      resumeDropzone.style.borderColor = '#10b981';
+    }
+  };
 
   $('start-btn').onclick = () => startInterview(state.domain);
   $('mic-btn').onclick = () => recognition ? recognition.start() : alert('Microphone unavailable.');

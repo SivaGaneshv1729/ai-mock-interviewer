@@ -62,31 +62,54 @@
             <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Select your expertise or define a custom interviewer persona.</p>
           </div>
 
-          <!-- Model Engine Selection -->
-          <div class="setup-card" style="border: none; padding: 0;">
-            <label class="field-label" style="font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); font-weight: 800;">INTELLIGENCE ENGINE</label>
-            <div class="role-selector" id="provider-selector" style="justify-content: flex-start; gap: 0.75rem; margin-top: 1rem;">
-              <button class="role-btn selected" data-provider="groq">Groq (Llama 8B/70B)</button>
-              <button class="role-btn" data-provider="gemini">Google Gemini 2.5</button>
-              <button class="role-btn" data-provider="ollama">Ollama (Local)</button>
+          <div class="setup-grid-v2">
+            <!-- expertise category -->
+            <div class="setup-card">
+              <label class="field-label">EXPERTISE CATEGORY</label>
+              <select id="category-select" class="modern-select">
+                <option value="" disabled selected>Select Expertise Category</option>
+                <option value="Technical">Technical (Engineering, Data, Product)</option>
+                <option value="Non-Technical">Non-Technical (HR, Sales, Finance)</option>
+              </select>
+            </div>
+
+            <!-- specific role -->
+            <div class="setup-card">
+              <label class="field-label">TARGET SPECIALTY / ROLE</label>
+              <select id="role-select" class="modern-select">
+                <!-- populated by JS -->
+              </select>
+            </div>
+
+            <!-- resume upload -->
+            <div class="setup-card wide">
+              <label class="field-label">UPLOAD RESUME (PDF/DOCX)</label>
+              <div class="upload-zone" id="resume-dropzone">
+                <i class="fas fa-file-upload"></i>
+                <div class="info">
+                  <span class="main-text">Click to upload or drag and drop</span>
+                  <span class="sub-text">Maximize interview accuracy with resume-tailored questions</span>
+                </div>
+                <input type="file" id="resume-upload" hidden accept=".pdf,.doc,.docx">
+                <div id="file-info" class="file-summary" style="display: none;">
+                  <i class="fas fa-check-circle"></i> <span id="filename-text"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- custom role -->
+            <div class="setup-card wide" id="custom-role-container" style="display: none;">
+              <label class="field-label">DEFINE CUSTOM ROLE</label>
+              <input type="text" id="custom-role-input" class="modern-input" placeholder="e.g. Senior Site Reliability Manager">
             </div>
           </div>
 
-          <div class="search-container">
-            <label class="field-label" style="font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); font-weight: 800; margin-bottom: 1rem; display: block;">TARGET SPECIALTY / ROLE</label>
-            <input type="text" id="role-search" placeholder="Search a role (e.g. Software Engineer)..." autocomplete="off">
-            
-            <div id="role-dropdown" class="role-dropdown-list">
-              <!-- Dropdown items will be rendered here -->
-            </div>
-          </div>
-
-          <div style="margin-top: auto; padding: 2rem 0;">
+          <div style="margin-top: 2rem;">
             <button class="btn-primary" id="start-btn" style="width: 100%; padding: 1.5rem; font-size: 1.25rem;">
-               Launch Interview <i class="fas fa-arrow-right" style="margin-left: 10px;"></i>
+               Launch Interview <i class="fas fa-rocket" style="margin-left: 10px;"></i>
             </button>
             <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 1.5rem; opacity: 0.7;">
-              <i class="fas fa-lock"></i> Session localized and secured.
+              <i class="fas fa-shield-halved"></i> Enterprise-grade session security active.
             </p>
           </div>
         </div>
@@ -187,13 +210,13 @@
       </div>
 
     </main>
-
+<!-- 
     <footer class="minimal-footer">
        <span>Interviewer AI 2026</span>
        <div class="links">
           <a href="#">Privacy</a> <a href="#">Ethical AI</a> <a href="#">Support</a>
        </div>
-    </footer>
+    </footer> -->
   </div>
 
   <div id="loading-overlay">
