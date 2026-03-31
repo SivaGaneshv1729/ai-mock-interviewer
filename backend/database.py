@@ -17,19 +17,25 @@ class Base(DeclarativeBase):
 
 class InterviewSessionModel(Base):
     __tablename__ = "interview_sessions"
-    
-    id = Column(String, primary_key=True) # session_id (UUID)
+
+    id = Column(String, primary_key=True)           # UUID
     domain = Column(String, nullable=False)
     model_provider = Column(String, default="groq")
     interview_stage = Column(String, default="basic")
     resume_context = Column(Text, nullable=True)
     last_user_response = Column(Text, nullable=True)
-    
-    # Store lists as JSON strings (SQLite handles this via JSON type)
+
+    # Interview content
     questions = Column(JSON, default=list)
     answers = Column(JSON, default=list)
     feedback = Column(JSON, default=list)
-    
+
+    # v2.0: Lifecycle & Analytics
+    status = Column(String, default="active")       # "active" | "completed"
+    summary = Column(Text, nullable=True)           # Final HTML summary
+    score = Column(JSON, nullable=True)             # {overall, communication, technical, confidence, strengths, improvements}
+    ended_at = Column(DateTime, nullable=True)      # Completion timestamp
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 # Engine and SessionMaker
