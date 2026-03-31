@@ -500,65 +500,168 @@ async function endInterview() {
 }
 
 // ─────────────────────────────────────────
-// Dashboard rendering
+// Chart.js instances (destroy before re-render)
 // ─────────────────────────────────────────
-function renderGauge(id, value, colorClass) {
-  const el = $(id);
-  if (!el) return;
-  const R = 37; // radius
-  const C = 2 * Math.PI * R;
-  const fill = el.querySelector('.gauge-fill');
-  const valEl = el.querySelector('.gauge-value');
-  if (fill) {
-    fill.style.strokeDasharray = C;
-    fill.style.strokeDashoffset = C;
-    fill.classList.add(colorClass);
-    setTimeout(() => {
-      fill.style.strokeDashoffset = C - (value / 100) * C;
-    }, 100);
-  }
-  if (valEl) valEl.innerHTML = `${value}<span>/ 100</span>`;
+let radarChart = null;
+let barChart = null;
+
+function destroyCharts() {
+  if (radarChart) { radarChart.destroy(); radarChart = null; }
+  if (barChart) { barChart.destroy(); barChart = null; }
 }
 
-function renderDashboard(score, summaryHtml, domain, sessionId) {
-  if (!score) score = { overall: 70, communication: 70, technical: 70, confidence: 70, strengths: [], improvements: [] };
+// ─────────────────────────────────────────
+// Parse summary markdown → clean HTML sections
+// ─────────────────────────────────────────
+function parseSummary(text) {
+  if (!text) return '<p style="color:var(--text-muted)">No summary available.</p>';
+  // Strip any existing HTML tags that markdown2 may have added
+  const clean = text.replace(/<[^>]+>/g, '').trim();
+
+  const sections = [];
+  const sectionRegex = /\*\*(.+?)\*\*\s*([\s\S]*?)(?=\*\*|$)/g;
+  let match;
+  while ((match = sectionRegex.exec(clean)) !== null) {
+    const heading = match[1].trim();
+    const body = match[2].trim()
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean);
+    sections.push({ heading, body });
+  }
+
+  if (sections.length === 0) {
+    // Fallback: render raw as paragraph
+    return `<p>${clean}</p>`;
+  }
+
+  return sections.map(({ heading, body }) => {
+    const isBullet = heading.toLowerCase().includes('strength') || heading.toLowerCase().includes('improvement');
+    const content = isBullet
+      ? '<ul>' + body.map(l => `<li>${l.replace(/^[-•]\s*/, '')}</li>`).join('') + '</ul>'
+      : `<p>${body.join(' ')}</p>`;
+    return `<div class="summary-section">
+      <div class="summary-section-title">${heading}</div>
+      <div class="summary-section-body">${content}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────
+// Render Dashboard — Chart.js based
+// ─────────────────────────────────────────
+function renderDashboard(score, summaryRaw, domain, sessionId) {
+  if (!score) score = { overall: 0, communication: 0, technical: 0, confidence: 0, strengths: [], improvements: [] };
+
+  const s = {
+    overall:       score.overall       || 0,
+    communication: score.communication || 0,
+    technical:     score.technical     || 0,
+    confidence:    score.confidence    || 0,
+  };
 
   // Meta
   const meta = $('dash-meta');
   if (meta) meta.textContent = `${domain} · ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
-  // Gauges
-  renderGauge('gauge-overall', score.overall || 70, 'overall');
-  renderGauge('gauge-communication', score.communication || 70, 'communication');
-  renderGauge('gauge-technical', score.technical || 70, 'technical');
-  renderGauge('gauge-confidence', score.confidence || 70, 'confidence');
+  // Overall score badge
+  const badge = $('dash-overall-badge');
+  if (badge) {
+    badge.textContent = s.overall;
+    badge.className = 'overall-badge ' + (s.overall >= 80 ? 'high' : s.overall >= 60 ? 'mid' : 'low');
+  }
+
+  // Destroy old charts before re-creating
+  destroyCharts();
+
+  // ── Radar Chart ──
+  const radarCtx = $('radar-chart');
+  if (radarCtx) {
+    radarChart = new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: ['Communication', 'Technical', 'Confidence'],
+        datasets: [{
+          label: 'Score',
+          data: [s.communication, s.technical, s.confidence],
+          backgroundColor: 'rgba(79,70,229,0.15)',
+          borderColor: '#6366f1',
+          borderWidth: 2,
+          pointBackgroundColor: '#6366f1',
+          pointRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 0, max: 100, ticks: { stepSize: 25, font: { size: 10 }, color: '#94a3b8' },
+            grid: { color: '#e2e8f0' },
+            pointLabels: { font: { size: 12, weight: '600' }, color: '#475569' },
+            angleLines: { color: '#e2e8f0' },
+          }
+        },
+        plugins: { legend: { display: false } },
+        animation: { duration: 900, easing: 'easeOutQuart' },
+      }
+    });
+  }
+
+  // ── Bar Chart ──
+  const barCtx = $('bar-chart');
+  if (barCtx) {
+    barChart = new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Communication', 'Technical', 'Confidence', 'Overall'],
+        datasets: [{
+          data: [s.communication, s.technical, s.confidence, s.overall],
+          backgroundColor: ['#6366f1', '#f59e0b', '#3b82f6', '#10b981'],
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { min: 0, max: 100, grid: { color: '#f1f5f9' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+          y: { grid: { display: false }, ticks: { color: '#475569', font: { size: 12, weight: '600' } } },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: ctx => ` Score: ${ctx.raw}/100` }
+          }
+        },
+        animation: { duration: 900, easing: 'easeOutQuart' },
+      }
+    });
+  }
 
   // Strengths
   const sEl = $('dash-strengths');
   if (sEl) {
-    sEl.innerHTML = '';
-    (score.strengths || []).forEach(s => {
-      const li = document.createElement('li');
-      li.textContent = s;
-      sEl.appendChild(li);
-    });
+    sEl.innerHTML = (score.strengths || []).length
+      ? (score.strengths).map(s => `<li>${s}</li>`).join('')
+      : '<li style="color:var(--text-muted)">No data</li>';
   }
 
   // Improvements
   const iEl = $('dash-improvements');
   if (iEl) {
-    iEl.innerHTML = '';
-    (score.improvements || []).forEach(s => {
-      const li = document.createElement('li');
-      li.textContent = s;
-      iEl.appendChild(li);
-    });
+    iEl.innerHTML = (score.improvements || []).length
+      ? (score.improvements).map(s => `<li>${s}</li>`).join('')
+      : '<li style="color:var(--text-muted)">No data</li>';
   }
 
-  // Summary
+  // Summary — parse to structured sections
   const sumEl = $('dash-summary');
-  if (sumEl) sumEl.innerHTML = summaryHtml || '';
+  if (sumEl) sumEl.innerHTML = parseSummary(summaryRaw);
 }
+
 
 // ─────────────────────────────────────────
 // History screen
