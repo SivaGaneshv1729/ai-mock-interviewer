@@ -104,12 +104,12 @@
             </div>
           </div>
 
-          <div style="margin-top: 2rem;">
-            <button class="btn-primary" id="start-btn" style="width: 100%; padding: 1.5rem; font-size: 1.25rem;">
+          <div>
+            <button class="btn-primary" id="start-btn" style="width: 100%; padding: 1.5rem; font-size: 1.25rem">
                Launch Interview <i class="fas fa-rocket" style="margin-left: 10px;"></i>
             </button>
             <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 1.5rem; opacity: 0.7;">
-              <i class="fas fa-shield-halved"></i> Enterprise-grade session security active.
+              <!-- <i class="fas fa-shield-halved"></i> Enterprise-grade session security active. -->
             </p>
           </div>
         </div>
@@ -117,59 +117,60 @@
 
       <!-- Interview Screen -->
       <div class="screen" id="screen-interview">
-        <div class="meeting-layout">
+        <div class="meeting-layout" id="interview-layout">
            <div class="meeting-stage">
-              <div class="session-meta">
-                  <span class="session-label" id="stat-role-info">SESSION ACTIVE • ROLE: SOFTWARE ENGINEER</span>
-                  <h2>Technical Interview Session</h2>
+              <div class="session-hud">
+                  <div class="hud-item"><span class="live-dot"></span> LIVE SESSION</div>
+                  <div class="hud-item" id="stat-role-info">ROLE: SOFTWARE ENGINEER</div>
+                  <div class="hud-timer" id="session-timer">00:00</div>
                </div>
               <div class="video-stage">
                  <img src="ai_recruiter_dr_aris.png" alt="Interviewer" class="ai-bg">
                  <div class="speaking-indicator" id="speaking-pill">
-                    <div class="pulse-dot"></div><span>Interviewer is Speaking...</span>
+                    <div class="pulse-dot"></div><span>Dr. Aris is Speaking...</span>
                  </div>
-                 <!-- User PiP -->
-                  <div class="user-pip-frame" id="cam-panel">
-                     <div class="pip-status-bar">
-                        <span class="live-dot"></span> 🔴 LIVE
-                     </div>
+                 
+                 <!-- User PiP (Floating Glass Card) -->
+                  <div class="user-float-card" id="cam-panel">
                      <video id="cam-video" autoplay muted playsinline></video>
                      <canvas id="cam-canvas"></canvas>
+                     <div class="pip-label">YOU</div>
                   </div>
               </div>
-              <div class="latest-card">
+              <div class="latest-card-compact">
                  <div class="icon"><i class="fas fa-quote-left"></i></div>
                  <div class="content">
-                    <span class="lbl">LATEST QUESTION</span>
-                    <p id="current-question-text">Listening for session start...</p>
+                    <p id="current-question-text">Initializing clinical session...</p>
                  </div>
               </div>
            </div>
-            <!-- Sidebar -->
-            <aside class="interviewer-sidebar">
+
+           <!-- Stealth Sidebar (Right) -->
+            <aside class="interviewer-sidebar collapsed" id="sidebar-chat">
                <div class="transcript-card glass-panel">
                   <div class="card-header">
-                    <h3><i class="fas fa-comment-dots" style="margin-right: 8px; color: var(--primary);"></i> Live Transcript</h3>
+                    <h3><i class="fas fa-comment-dots"></i> Transcript</h3>
                     <span class="rec-dot"></span>
                   </div>
                   <div class="transcript-body" id="chat-messages"></div>
                   <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Type your answer here..." autocomplete="off">
-                    <button id="chat-send-btn" title="Send Answer"><i class="fas fa-paper-plane"></i></button>
+                    <input type="text" id="chat-input" placeholder="Type your response..." autocomplete="off">
+                    <button id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
                   </div>
                </div>
             </aside>
         </div>
-        <!-- Controls -->
-        <div class="controls-overlay">
-           <button class="control-btn mic" id="mic-btn" title="Microphone"><i class="fas fa-microphone"></i></button>
-           <button class="control-btn" id="cam-toggle" title="Camera"><i class="fas fa-video"></i></button>
-           <div class="divider"></div>
-           <button class="control-btn" id="repeat-btn" title="Repeat Question"><i class="fas fa-redo"></i></button>
-           <button class="control-btn" id="clarify-btn" title="Clarify Question"><i class="fas fa-question-circle"></i></button>
-           <button class="control-btn" id="feedback-btn" title="Get Mid-Interview Feedback"><i class="fas fa-comment-dots"></i></button>
-           <div class="divider"></div>
-           <button class="control-btn end" id="sidebar-end">End Interview</button>
+
+        <!-- Floating Glass Control Dock (Bottom Center) -->
+        <div class="controls-dock">
+           <button class="dock-btn mic" id="mic-btn" title="Microphone"><i class="fas fa-microphone"></i></button>
+           <button class="dock-btn" id="cam-toggle" title="Camera"><i class="fas fa-video"></i></button>
+           <div class="dock-divider"></div>
+           <button class="dock-btn" id="repeat-btn" title="Repeat Question"><i class="fas fa-redo"></i></button>
+           <button class="dock-btn" id="clarify-btn" title="Clarify Question"><i class="fas fa-question-circle"></i></button>
+           <button class="dock-btn highlight" id="chat-toggle-btn" title="Toggle Chat Transcript"><i class="fas fa-comment-alt"></i></button>
+           <div class="dock-divider"></div>
+           <button class="dock-btn end" id="sidebar-end">End Interview</button>
         </div>
       </div>
 

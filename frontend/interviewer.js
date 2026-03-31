@@ -182,6 +182,29 @@ async function endInterview() {
   }
 }
 
+// ── Session Hud Logic ──
+let sessionTimerInterval;
+function startSessionTimer() {
+  let seconds = 0;
+  const timerEl = $('session-timer');
+  if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+  sessionTimerInterval = setInterval(() => {
+    seconds++;
+    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    if (timerEl) timerEl.textContent = `${mins}:${secs}`;
+  }, 1000);
+}
+
+function toggleChat() {
+  const sidebar = $('sidebar-chat');
+  const layout = $('interview-layout');
+  if (sidebar && layout) {
+    sidebar.classList.toggle('collapsed');
+    layout.classList.toggle('collapsed-view');
+  }
+}
+
 // ── Dashboard Charts ──
 let radarChart; 
 function renderDashboard(score, summary) {
@@ -517,10 +540,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  $('start-btn').onclick = () => startInterview(state.domain);
+  // Navigation Update: Close sidebar on practice start
+  $('start-btn').onclick = () => {
+    const sidebar = $('sidebar-chat');
+    const layout = $('interview-layout');
+    if (sidebar) sidebar.classList.add('collapsed');
+    if (layout) layout.classList.add('collapsed-view');
+    startInterview(state.domain);
+    startSessionTimer();
+  };
+
   $('mic-btn').onclick = () => recognition ? recognition.start() : alert('Microphone unavailable.');
+  $('chat-toggle-btn').onclick = toggleChat;
   
-  // New Interactive Buttons
+  // New Interactive Buttons (Refined for Dock)
   $('repeat-btn').onclick = () => {
     if (state.lastQuestion) {
        speak(state.lastQuestion);
@@ -538,20 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ session_id: state.sessionId })
       });
       addTranscriptEntry('interviewer', data.reply);
-    } catch (e) { alert(e.message); }
-    setLoading(false);
-  };
-
-  $('feedback-btn').onclick = async () => {
-    if (!state.sessionId) return;
-    setLoading(true, 'Retrieving mid-interview coaching...');
-    try {
-      const data = await apiFetch('/api/interview/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: state.sessionId })
-      });
-      addTranscriptEntry('interviewer', `<b>Coaching:</b> ${data.reply}`);
     } catch (e) { alert(e.message); }
     setLoading(false);
   };
@@ -582,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('cam-toggle').onclick = () => {
     camOn = !camOn;
     $('cam-toggle').classList.toggle('active', camOn);
-    $('cam-panel').style.opacity = camOn ? '1' : '0';
+    $('cam-panel').style.opacity = camOn ? '1' : '0.1';
     if (camOn) CameraModule.start();
     else CameraModule.stop();
   };
