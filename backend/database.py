@@ -34,6 +34,7 @@ class InterviewSessionModel(Base):
     status = Column(String, default="active")       # "active" | "completed"
     summary = Column(Text, nullable=True)           # Final HTML summary
     score = Column(JSON, nullable=True)             # {overall, communication, technical, confidence, strengths, improvements}
+    security_log = Column(JSON, nullable=True)      # [{type, timestamp, ...}] cheat/face events
     ended_at = Column(DateTime, nullable=True)      # Completion timestamp
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

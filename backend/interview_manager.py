@@ -47,8 +47,8 @@ class InterviewManager:
             await db.commit()
 
     @staticmethod
-    async def complete_session(session_id: str, summary: str, score: dict):
-        """Mark session as completed with summary and score — does NOT delete."""
+    async def complete_session(session_id: str, summary: str, score: dict, security_log: list = None):
+        """Mark session as completed with summary, score, and security log — does NOT delete."""
         async with AsyncSessionLocal() as db:
             result = await db.execute(
                 select(InterviewSessionModel).where(InterviewSessionModel.id == session_id)
@@ -58,6 +58,7 @@ class InterviewManager:
                 session.status = "completed"
                 session.summary = summary
                 session.score = score
+                session.security_log = security_log or []
                 session.ended_at = datetime.datetime.utcnow()
                 await db.merge(session)
                 await db.commit()
