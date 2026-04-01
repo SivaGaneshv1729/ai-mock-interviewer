@@ -3,6 +3,7 @@ import sys
 import json
 import asyncio
 import aiohttp
+import itertools
 from dotenv import load_dotenv
 from loguru import logger
 
@@ -54,6 +55,12 @@ class Settings(BaseSettings):
     gemini_api_key1: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
     gemini_model: str = "gemini-2.5-flash"
+    
+    # --- NEW CONFIGURATIONS ---
+    llm_mode: str = "online"             # 'online' or 'offline'
+    large_model: str = "gemini-2.5-pro"  # Specifically for resume parsing
+    # --------------------------
+    
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3"
     host: str = "0.0.0.0"
@@ -69,6 +76,16 @@ class Settings(BaseSettings):
         self.groq_api_key2 = clean_key(self.groq_api_key2)
         self.gemini_api_key1 = clean_key(self.gemini_api_key1)
         self.ollama_base_url = clean_key(self.ollama_base_url)
+
+
+# --- ROUND ROBIN GENERATOR ---
+_online_providers = itertools.cycle(["groq", "gemini"])
+
+def get_current_provider() -> str:
+    """Returns the appropriate provider based on the LLM mode."""
+    if settings.llm_mode.lower() == "offline":
+        return "ollama"
+    return next(_online_providers)
 
 
 from fastapi.responses import FileResponse
@@ -126,15 +143,16 @@ async def log_requests(request, call_next):
 # ─────────────────────────────────────────────────────────────
 # LLM call helper
 # ─────────────────────────────────────────────────────────────
-async def call_llm(prompt: str, provider: str) -> str:
-    logger.info(f"LLM → {provider}")
+async def call_llm(prompt: str, provider: str, override_model: str = None) -> str:
+    logger.info(f"LLM → {provider} (Model: {override_model or 'default'})")
     timeout = aiohttp.ClientTimeout(total=30)
     try:
         async with aiohttp.ClientSession(timeout=timeout) as session:
             if provider == "groq":
                 if not settings.groq_api_key1:
                     raise Exception("Groq primary key not configured.")
-                client1 = GroqClient(settings.groq_api_key1, settings.groq_model)
+                model_to_use = override_model or settings.groq_model
+                client1 = GroqClient(settings.groq_api_key1, model_to_use)
                 try:
                     res = await client1.get_completion(session, prompt)
                     logger.info("Groq primary ✓")
@@ -142,7 +160,7 @@ async def call_llm(prompt: str, provider: str) -> str:
                 except Exception as e:
                     logger.warning(f"Groq primary failed: {e}")
                     if settings.groq_api_key2:
-                        client2 = GroqClient(settings.groq_api_key2, settings.groq_model)
+                        client2 = GroqClient(settings.groq_api_key2, model_to_use)
                         res = await client2.get_completion(session, prompt)
                         logger.info("Groq fallback ✓")
                         return res
@@ -150,12 +168,14 @@ async def call_llm(prompt: str, provider: str) -> str:
             elif provider == "gemini":
                 if not settings.gemini_api_key1:
                     raise Exception("Gemini key not configured.")
-                client = GeminiClient(settings.gemini_api_key1, settings.gemini_model)
+                model_to_use = override_model or settings.gemini_model
+                client = GeminiClient(settings.gemini_api_key1, model_to_use)
                 res = await client.get_completion(session, prompt)
                 logger.info("Gemini ✓")
                 return res
             elif provider == "ollama":
-                client = OllamaClient(settings.ollama_base_url, settings.ollama_model)
+                model_to_use = override_model or settings.ollama_model
+                client = OllamaClient(settings.ollama_base_url, model_to_use)
                 res = await client.get_completion(session, prompt)
                 logger.info("Ollama ✓")
                 return res
@@ -222,13 +242,22 @@ def parse_score(raw: str) -> dict:
 # Interview Endpoints
 # ─────────────────────────────────────────────────────────────
 @app.post("/api/interview/start")
-async def start(domain: str = Form(...), model_provider: str = Form("groq"), resume: UploadFile = File(None)):
-    logger.info(f"Start: domain={domain}, provider={model_provider}")
+async def start(domain: str = Form(...), resume: UploadFile = File(None)):
     resume_text = ""
     if resume and resume.filename:
         resume_text = extract_text(await resume.read(), resume.filename)
 
-    session = await InterviewManager.create_session(domain, model_provider, resume_context=resume_text)
+    # Determine dynamic provider
+    provider = get_current_provider()
+    override_model = None
+
+    # Force large model specifically for resume parsing if online
+    if resume_text and settings.llm_mode.lower() == "online":
+        provider = "gemini"
+        override_model = settings.large_model
+        logger.info(f"Resume detected. Upgrading to large model: {override_model}")
+
+    session = await InterviewManager.create_session(domain, provider, resume_context=resume_text)
 
     if "hr" in domain.lower() or "human resource" in domain.lower():
         prompt = f"Conduct an HR behavioral interview. Resume: {resume_text[:2000]}. Ask a personalized first behavioral question."
@@ -237,7 +266,8 @@ async def start(domain: str = Form(...), model_provider: str = Form("groq"), res
     else:
         prompt = INTERVIEW_PROMPT_BASE.format(domain=domain, stage="basic", context="Starting session.", lastResponse="Start")
 
-    question = await call_llm(prompt, model_provider)
+    # Pass the override_model (if any) to this specific call
+    question = await call_llm(prompt, provider, override_model)
     session.questions.append(question)
     await InterviewManager.update_session(session)
     return {"session_id": session.id, "reply": question}
@@ -265,7 +295,11 @@ async def answer(req: SessionReq):
         domain=session.domain, stage=session.interview_stage,
         context=context, lastResponse=req.answer
     )
-    question = await call_llm(prompt, session.model_provider)
+    
+    # Use round-robin/offline logic for the standard conversation
+    provider = get_current_provider()
+    question = await call_llm(prompt, provider)
+    
     session.questions.append(question)
     await InterviewManager.update_session(session)
     return {"reply": question}
@@ -283,7 +317,9 @@ async def clarify(req: SessionReq):
         domain=session.domain, context=context,
         question=last_q, lastResponse=session.last_user_response or "None"
     )
-    clarification = await call_llm(prompt, session.model_provider)
+    
+    provider = get_current_provider()
+    clarification = await call_llm(prompt, provider)
     return {"reply": clarification}
 
 
@@ -298,7 +334,10 @@ async def feedback(req: SessionReq):
         domain=session.domain, context=context,
         lastResponse=session.last_user_response
     )
-    fb = await call_llm(prompt, session.model_provider)
+    
+    provider = get_current_provider()
+    fb = await call_llm(prompt, provider)
+    
     session.feedback.append(fb)
     await InterviewManager.update_session(session)
     return {"reply": fb}
@@ -314,7 +353,7 @@ async def end(req: SessionReq):
 
     # Generate summary
     summary_prompt = SUMMARY_PROMPT_BASE.format(domain=session.domain, context=context)
-    summary_raw = await call_llm(summary_prompt, session.model_provider)
+    summary_raw = await call_llm(summary_prompt, get_current_provider())
     summary_html = markdown2.markdown(summary_raw)
 
     # Generate structured score
@@ -324,7 +363,8 @@ async def end(req: SessionReq):
         security_events=json.dumps(req.security_log)
     )
     try:
-        score_raw = await call_llm(score_prompt, session.model_provider)
+        # Calling get_current_provider() again ensures load distribution even on wrap-up tasks
+        score_raw = await call_llm(score_prompt, get_current_provider())
         score = parse_score(score_raw)
     except Exception as e:
         logger.warning(f"Scoring failed, using defaults: {e}")
