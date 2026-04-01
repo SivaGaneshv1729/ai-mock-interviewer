@@ -197,6 +197,7 @@ body {
   flex-shrink: 0; padding-top: 1.5rem; border-top: 1px solid var(--border); margin-top: auto; 
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
 }
+
 .setup-header p { font-size: var(--fs-lg); color: var(--text-muted); margin-top: 0.75rem; }
 .search-container { position: relative; width: 100%; max-width: 900px; }
 #role-search { 
@@ -314,7 +315,7 @@ body {
 #screen-interview { padding: 0; overflow: hidden; height: 100%; flex: 1; display: none; flex-direction: column; background: var(--bg-app); border: none; position: relative; }
 #screen-interview.active { display: flex; }
 .meeting-layout { 
-  display: grid; grid-template-columns: 1fr 450px; column-gap: 0;
+  display: grid; grid-template-columns: 1fr 450px; column-gap: 20px;
   height: 100%; width: 100%; flex: 1; min-height: 0; transition: grid-template-columns 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }

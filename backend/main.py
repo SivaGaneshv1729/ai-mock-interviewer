@@ -260,9 +260,9 @@ async def start(domain: str = Form(...), resume: UploadFile = File(None)):
     session = await InterviewManager.create_session(domain, provider, resume_context=resume_text)
 
     if "hr" in domain.lower() or "human resource" in domain.lower():
-        prompt = f"Conduct an HR behavioral interview. Resume: {resume_text[:2000]}. Ask a personalized first behavioral question."
+        prompt = f"Conduct an HR behavioral interview using this Resume context: {resume_text[:2000]}. Ask ONE personalized first behavioral question. CRITICAL: NO PREAMBLES. Maximum 15 words. Shorter is better. Direct question only."
     elif resume_text:
-        prompt = f"Conduct a {domain} interview based on this resume: {resume_text[:2000]}. Ask a targeted first technical question."
+        prompt = f"Conduct a {domain} interview using this Resume context: {resume_text[:2000]}. Ask ONE targeted first technical question. CRITICAL: NO PREAMBLES. Maximum 15 words. Shorter is better. Direct question only."
     else:
         prompt = INTERVIEW_PROMPT_BASE.format(domain=domain, stage="basic", context="Starting session.", lastResponse="Start")
 
@@ -287,6 +287,12 @@ async def answer(req: SessionReq):
 
     session.answers.append(req.answer)
     session.last_user_response = req.answer
+    
+    # ── 10-Question Hard Cap Logic ──
+    if len(session.questions) >= 10:
+        end_msg = "Thank you. We have completed the intended series of questions. Please click 'End Interview' to generate your final report."
+        return {"reply": end_msg}
+
     if len(session.questions) >= 5:
         session.interview_stage = "technical"
 
