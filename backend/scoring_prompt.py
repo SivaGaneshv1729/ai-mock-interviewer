@@ -5,24 +5,33 @@ Domain: {domain}
 Transcript:
 {context}
 
-Evaluate exactly five key dimensions based on evidence:
+Security & Proctoring Log:
+{security_events}
 
-- technical (0-100): Domain accuracy. Did they mention specific facts/tools/{domain} concepts? Penalise generic answers.
-- problem_solving (0-100): Analytical approach. Did they structure their thoughts or consider edge cases?
-- communication (0-100): Articulation and structure. Was the tone professional and the pacing clear?
-- clarity (0-100): Precision. Did they answer the specific question asked without rambling?
-- confidence (0-100): Committing to answers. Penalise excessive hedging (e.g. "maybe", "I guess").
+Evaluate exactly EIGHT key dimensions based on evidence (score 0-100):
 
-- overall (0-100): Weighted blend — technical 30%, problem_solving 20%, communication 20%, clarity 15%, confidence 15%.
+1. technical: Domain accuracy. Did they mention specific facts/tools/{domain} concepts? 
+2. topic_depth: How deep did they go? Did they provide nuanced details or just surface-level terminology?
+3. problem_solving: Analytical approach. Did they structure their thoughts or consider edge cases?
+4. communication: Articulation and structure. Was the tone professional and the pacing clear?
+5. clarity: Precision. Did they answer the specific question asked without rambling?
+6. confidence: Committing to answers. Penalise excessive hedging (e.g. "maybe", "I guess").
+7. consistency: Did the quality of answers remain high throughout, or did it fluctuate? Factor in any security violations (e.g., tab switching) into the consistency/integrity score.
+8. context_fit: How well did they understand the role's specific environment and challenges?
+
+Overall Proficency (0-100): A weighted blend of all 8 axes.
 
 Return ONLY a valid JSON object — no markdown, no explanation:
 {{
-  "overall": <integer 0-100>,
-  "technical": <integer 0-100>,
-  "problem_solving": <integer 0-100>,
-  "communication": <integer 0-100>,
-  "clarity": <integer 0-100>,
-  "confidence": <integer 0-100>,
+  "overall": <integer>,
+  "technical": <integer>,
+  "topic_depth": <integer>,
+  "problem_solving": <integer>,
+  "communication": <integer>,
+  "clarity": <integer>,
+  "confidence": <integer>,
+  "consistency": <integer>,
+  "context_fit": <integer>,
   "strengths": ["<evidence-based strength>", "<evidence-based strength>"],
-  "improvements": ["<evidence-based improvement>", "<evidence-based improvement>"]
+  "improvements": ["<evidence-based improvement (e.g. eye contact, tab switching, etc.)>", "<evidence-based improvement>"]
 }}"""

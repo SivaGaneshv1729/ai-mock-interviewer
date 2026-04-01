@@ -211,8 +211,9 @@ def parse_score(raw: str) -> dict:
     except Exception as e:
         logger.warning(f"Score parse failed: {e}")
     return {
-        "overall": 70, "technical": 70, "problem_solving": 70, 
-        "communication": 70, "clarity": 70, "confidence": 70,
+        "overall": 70, "technical": 70, "topic_depth": 70, "problem_solving": 70, 
+        "communication": 70, "clarity": 70, "confidence": 70, 
+        "consistency": 70, "context_fit": 70,
         "strengths": ["Completed the interview"], "improvements": ["Practice more"]
     }
 
@@ -317,7 +318,11 @@ async def end(req: SessionReq):
     summary_html = markdown2.markdown(summary_raw)
 
     # Generate structured score
-    score_prompt = SCORING_PROMPT.format(domain=session.domain, context=context)
+    score_prompt = SCORING_PROMPT.format(
+        domain=session.domain, 
+        context=context,
+        security_events=json.dumps(req.security_log)
+    )
     try:
         score_raw = await call_llm(score_prompt, session.model_provider)
         score = parse_score(score_raw)

@@ -119,25 +119,33 @@
       <!-- Interview Screen -->
       <div class="screen" id="screen-interview">
         <div class="meeting-layout" id="interview-layout">
-           <div class="meeting-stage">
-              <div class="session-hud">
+            <div class="meeting-stage">
+               <!-- Proctoring Alert HUD (Top Center) -->
+               <div id="warning-hud" class="warning-hud">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span id="warning-msg">WARNING: Proctoring Rule Violation Detected</span>
+               </div>
+
+               <div class="session-hud">
                   <div class="hud-item"><span class="live-dot"></span> LIVE SESSION</div>
                   <div class="hud-item" id="stat-role-info">ROLE: SOFTWARE ENGINEER</div>
                   <div class="hud-timer" id="session-timer">00:00</div>
                </div>
-              <div class="video-stage">
-                 <img src="ai_recruiter_dr_aris.png" alt="Interviewer" class="ai-bg">
-                 <div class="speaking-indicator" id="speaking-pill">
-                    <div class="pulse-dot"></div><span>Dr. Aris is Speaking...</span>
-                 </div>
-                 
-                 <!-- User PiP (Floating Glass Card) -->
-                  <div class="user-float-card" id="cam-panel">
-                     <video id="cam-video" autoplay muted playsinline></video>
-                     <canvas id="cam-canvas"></canvas>
-                     <div class="pip-label">YOU</div>
+               <div class="video-stage">
+                  <!-- Main Stage: Candidate Camera Stream -->
+                  <video id="cam-video" autoplay muted playsinline class="user-main-video"></video>
+                  <canvas id="cam-canvas"></canvas>
+
+                  <div class="speaking-indicator" id="speaking-pill">
+                     <div class="pulse-dot"></div><span>Candidate is Speaking...</span>
                   </div>
-              </div>
+                  
+                  <!-- Interviewer PiP (Floating AI Glass Card) -->
+                   <div class="user-float-card" id="cam-panel">
+                      <img src="ai_recruiter_dr_aris.png" alt="Interviewer" class="ai-bg-pip">
+                      <div class="pip-label">DR. ARIS</div>
+                   </div>
+               </div>
               <div class="latest-card-compact">
                  <div class="icon"><i class="fas fa-quote-left"></i></div>
                  <div class="content">
@@ -177,64 +185,101 @@
 
       <!-- Dashboard Screen -->
       <!-- Dashboard Screen -->
+      <!-- Interview Performance Report (Executive Cockpit) -->
       <div class="screen" id="screen-dashboard">
-        <div class="dashboard-centered">
-          <div class="report-header">
-            <h2 id="dash-role-title">INTERVIEW PERFORMANCE REPORT</h2>
-            <div class="overall-gauge" id="dash-overall-badge">--</div>
-          </div>
-
-          <div class="metric-scorecard-grid">
-            <div class="m-card">
-              <span class="m-lbl">Technical</span>
-              <span class="m-val" id="m-tech">--</span>
+        <div class="cockpit-wrapper">
+          
+          <div class="cockpit-header">
+            <div class="h-group">
+              <span class="eyebrow">PERFORMANCE ANALYSIS</span>
+              <h2 id="dash-role-title" class="cockpit-title">INTERVIEW PERFORMANCE REPORT</h2>
             </div>
-            <div class="m-card">
-              <span class="m-lbl">Problem Solving</span>
-              <span class="m-val" id="m-prob">--</span>
-            </div>
-            <div class="m-card">
-              <span class="m-lbl">Communication</span>
-              <span class="m-val" id="m-comm">--</span>
-            </div>
-            <div class="m-card">
-              <span class="m-lbl">Clarity</span>
-              <span class="m-val" id="m-clar">--</span>
-            </div>
-            <div class="m-card">
-              <span class="m-lbl">Confidence</span>
-              <span class="m-val" id="m-conf">--</span>
+            <div class="cockpit-meta">
+              <span class="meta-item"><i class="fas fa-fingerprint"></i> SECURE SESSION</span>
+              <span class="meta-item"><i class="fas fa-microchip"></i> AI EVALUATION ACTIVE</span>
             </div>
           </div>
 
-          <div class="dash-grid-stats v2">
-            <div class="chart-hold-v2">
-              <canvas id="radar-chart"></canvas>
+          <div class="cockpit-grid">
+            <!-- Col 1: Hero & Metric Stacks -->
+            <div class="cockpit-col metrics-col">
+              <div class="glass-card hero-score-card">
+                <label class="card-lbl">OVERALL PROFICIENCY</label>
+                <div class="overall-gauge" id="dash-overall-badge">--</div>
+                <div class="score-bar-bg"><div class="score-bar-fill" id="dash-overall-fill"></div></div>
+              </div>
+              
+              <div class="metrics-stack">
+                <div class="m-hud-card">
+                  <span class="m-hud-lbl">Technical</span>
+                  <span class="m-hud-val" id="m-tech">--</span>
+                </div>
+                <div class="m-hud-card">
+                  <span class="m-hud-lbl">Topic Depth</span>
+                  <span class="m-hud-val" id="m-depth">--</span>
+                </div>
+                <div class="m-hud-card">
+                  <span class="m-hud-lbl">Problem Solving</span>
+                  <span class="m-hud-val" id="m-prob">--</span>
+                </div>
+                <div class="m-hud-card">
+                  <span class="m-hud-lbl">Communication</span>
+                  <span class="m-hud-val" id="m-comm">--</span>
+                </div>
+                <div class="m-hud-card">
+                  <span class="m-hud-lbl">Clarity</span>
+                  <span class="m-hud-val" id="m-clar">--</span>
+                </div>
+                <div class="m-hud-card">
+                  <span class="m-hud-lbl">Confidence</span>
+                  <span class="m-hud-val" id="m-conf">--</span>
+                </div>
+                <div class="m-hud-card">
+                  <span class="m-hud-lbl">Consistency</span>
+                  <span class="m-hud-val" id="m-cons">--</span>
+                </div>
+                <div class="m-hud-card">
+                  <span class="m-hud-lbl">Context Fit</span>
+                  <span class="m-hud-val" id="m-fit">--</span>
+                </div>
+              </div>
             </div>
-            <div class="dash-summary-pane">
-              <div class="summary-card">
-                <label class="field-label">EXECUTIVE SUMMARY</label>
-                <div id="dash-summary" class="summary-text"></div>
+
+            <!-- Col 2: Analytics Center -->
+            <div class="cockpit-col analytics-col">
+              <div class="glass-card chart-main">
+                <label class="card-lbl">5-AXIS COMPETENCY MAPPING</label>
+                <div class="radar-hold">
+                  <canvas id="radar-chart"></canvas>
+                </div>
+              </div>
+              
+              <div class="glass-card summary-card-v2">
+                <label class="card-lbl">EXECUTIVE SUMMARY</label>
+                <div id="dash-summary" class="summary-text-v2"></div>
+              </div>
+            </div>
+
+            <!-- Col 3: Strategic Briefing -->
+            <div class="cockpit-col insights-col">
+              <div class="glass-card insight-card-v2 positive">
+                <div class="i-header-v2"><i class="fas fa-bolt"></i> KEY STRENGTHS</div>
+                <ul id="report-strengths" class="insight-list-v2"></ul>
+              </div>
+              
+              <div class="glass-card insight-card-v2 critical">
+                <div class="i-header-v2"><i class="fas fa-crosshairs"></i> IMPROVEMENTS</div>
+                <ul id="report-improvements" class="insight-list-v2"></ul>
               </div>
             </div>
           </div>
 
-          <div class="insights-grid">
-            <div class="insight-col strengths">
-              <div class="i-header"><i class="fas fa-check-circle"></i> KEY STRENGTHS</div>
-              <ul id="report-strengths" class="insight-list"></ul>
-            </div>
-            <div class="insight-col improvements">
-              <div class="i-header"><i class="fas fa-exclamation-triangle"></i> TARGETED IMPROVEMENTS</div>
-              <ul id="report-improvements" class="insight-list"></ul>
-            </div>
-          </div>
-
-          <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center;">
-            <button class="btn-primary" style="width: auto; padding: 1.25rem 3rem;" onclick="showScreen('history'); loadHistory();">
-              <i class="fas fa-archive"></i> Close & View Archive
+          <div class="cockpit-footer">
+            <button class="btn-cockpit-close" onclick="showScreen('history'); loadHistory();">
+              <i class="fas fa-archive"></i> RETURN TO ARCHIVE & VIEW ALL SESSIONS
             </button>
           </div>
+
         </div>
       </div>
 

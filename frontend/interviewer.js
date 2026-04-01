@@ -205,25 +205,63 @@ function toggleChat() {
   }
 }
 
+// ── Proctoring Warnings (Soft Alerts) ──
+let warningTimeout;
+function triggerWarning(msg) {
+  const hud = $('warning-hud');
+  const msgEl = $('warning-msg');
+  if (!hud || !msgEl) return;
+
+  hud.style.display = 'flex';
+  msgEl.innerText = msg;
+
+  if (warningTimeout) clearTimeout(warningTimeout);
+  warningTimeout = setTimeout(() => {
+    hud.style.display = 'none';
+  }, 5000); // 5s Soft Alert
+}
+
 // ── Dashboard Charts ──
 let radarChart; 
 function renderDashboard(score, summary) {
-  const s = score || { overall: 70, technical: 70, problem_solving: 70, communication: 70, clarity: 70, confidence: 70 };
+  $('dash-role-title').innerText = `PERFORMANCE REPORT: ${currentRole || 'Target Role'}`;
+  $('dash-overall-badge').innerText = score.overall;
   
-  $('dash-overall-badge').textContent = s.overall;
-  $('m-tech').textContent = s.technical;
-  $('m-prob').textContent = s.problem_solving;
-  $('m-comm').textContent = s.communication;
-  $('m-clar').textContent = s.clarity;
-  $('m-conf').textContent = s.confidence;
-  
-  $('dash-summary').innerHTML = summary; 
+  // Animate proficiency bar
+  setTimeout(() => {
+    const bar = $('dash-overall-fill');
+    if (bar) bar.style.width = score.overall + '%';
+  }, 100);
 
-  // Render Lists
-  const strengthsCont = $('report-strengths');
-  const improvementsCont = $('report-improvements');
-  if (strengthsCont) strengthsCont.innerHTML = (s.strengths || []).map(str => `<li>${str}</li>`).join('');
-  if (improvementsCont) improvementsCont.innerHTML = (s.improvements || []).map(imp => `<li>${imp}</li>`).join('');
+  // Update Metrics Stack (8-Axis)
+  if ($('m-tech')) $('m-tech').innerText = score.technical;
+  if ($('m-depth')) $('m-depth').innerText = score.topic_depth || score.technical;
+  if ($('m-prob')) $('m-prob').innerText = score.problem_solving;
+  if ($('m-comm')) $('m-comm').innerText = score.communication;
+  if ($('m-clar')) $('m-clar').innerText = score.clarity;
+  if ($('m-conf')) $('m-conf').innerText = score.confidence;
+  if ($('m-cons')) $('m-cons').innerText = score.consistency || 75;
+  if ($('m-fit')) $('m-fit').innerText = score.context_fit || 80;
+
+  $('dash-summary').innerText = summary.executive_summary;
+
+  // Insights Mapping (Modern Lists)
+  const strengthsUL = $('report-strengths');
+  const improvementsUL = $('report-improvements');
+  strengthsUL.innerHTML = '';
+  improvementsUL.innerHTML = '';
+
+  summary.key_strengths.forEach(s => {
+    const li = document.createElement('li');
+    li.innerText = s;
+    strengthsUL.appendChild(li);
+  });
+
+  summary.targeted_improvements.forEach(i => {
+    const li = document.createElement('li');
+    li.innerText = i;
+    improvementsUL.appendChild(li);
+  });
 
   const ctx = $('radar-chart');
   if (radarChart) radarChart.destroy();
@@ -231,15 +269,26 @@ function renderDashboard(score, summary) {
   radarChart = new Chart(ctx, {
     type: 'radar',
     data: {
-      labels: ['Technical', 'Problem Solving', 'Communication', 'Clarity', 'Confidence'],
+      labels: ['Technical', 'Topic Depth', 'Problem Solving', 'Communication', 'Clarity', 'Confidence', 'Consistency', 'Context Fit'],
       datasets: [{
-        label: 'Candidate Profile',
-        data: [s.technical, s.problem_solving, s.communication, s.clarity, s.confidence],
-        backgroundColor: 'rgba(42, 140, 244, 0.2)',
-        borderColor: '#2a8cf4',
+        label: 'Competency Mapping',
+        data: [
+          score.technical, 
+          score.topic_depth || score.technical, 
+          score.problem_solving, 
+          score.communication, 
+          score.clarity, 
+          score.confidence,
+          score.consistency || 75,
+          score.context_fit || 80
+        ],
+        backgroundColor: 'rgba(161, 141, 255, 0.25)',
+        borderColor: '#a18dff',
         borderWidth: 3,
-        pointBackgroundColor: '#2a8cf4',
-        pointRadius: 4
+        pointBackgroundColor: '#7d5fff',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#7d5fff'
       }]
     },
     options: {
@@ -620,7 +669,20 @@ document.addEventListener('DOMContentLoaded', () => {
     endInterview();
   };
   
-  CameraModule.init({});
+  CameraModule.init({
+    onSecurityEvent: (event) => {
+      const labels = {
+        multiple_faces: 'Multiple faces detected! Please maintain absolute privacy.',
+        face_not_detected: 'Face not detected! Please stay centered in the frame.',
+        tab_switch: 'Warning: Window/Tab switch detected. This is being recorded.',
+        paste_attempt: 'Warning: Copy-Paste is restricted during the session.',
+        right_click: 'Security: Right-click context menu is restricted.',
+        key_shortcut: 'Warning: Developer shortcut detected.'
+      };
+      const msg = labels[event.type] || `Security Notice: ${event.type}`;
+      triggerWarning(msg);
+    }
+  });
   
   // Initial screen
   showScreen('welcome');
