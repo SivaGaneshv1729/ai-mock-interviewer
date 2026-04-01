@@ -590,15 +590,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Navigation Update: Close sidebar on practice start
-  $('start-btn').onclick = () => {
-    const sidebar = $('sidebar-chat');
-    const layout = $('interview-layout');
-    if (sidebar) sidebar.classList.add('collapsed');
-    if (layout) layout.classList.add('collapsed-view');
-    startInterview(state.domain);
-    startSessionTimer();
-  };
+  // ── Unified Setup Logic (Zero-Scroll Single-Page) ──
+  const btnStart = $('start-btn');
+  
+  if (btnStart) {
+    btnStart.onclick = () => {
+      if (!state.domain) {
+        alert("Please select a target role or define a custom specialty.");
+        return;
+      }
+      
+      const sidebar = $('sidebar-chat');
+      const layout = $('interview-layout');
+      if (sidebar) sidebar.classList.add('collapsed');
+      if (layout) layout.classList.add('collapsed-view');
+
+      // Final check for custom input sync
+      if (roleSelect.value === 'Other') state.domain = customRoleInput.value;
+      else state.domain = roleSelect.value;
+      
+      startInterview(state.domain);
+      startSessionTimer();
+    };
+  }
 
   $('mic-btn').onclick = () => recognition ? recognition.start() : alert('Microphone unavailable.');
   $('chat-toggle-btn').onclick = toggleChat;

@@ -59,60 +59,55 @@
       <div class="screen active" id="screen-welcome">
         <div class="welcome-box">
           <div class="setup-header">
-            <h2 style="font-size: 2.5rem; letter-spacing: -0.03em;">Configure Practice Session</h2>
-            <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Select your expertise or define a custom interviewer persona.</p>
+            <h2 style="font-size: 2.1rem; letter-spacing: -0.04em; margin-bottom: 0.2rem;">Expertise Configuration</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Select your specialty or define a custom persona to begin the clinical session.</p>
           </div>
 
-          <div class="setup-grid-v2">
-            <!-- expertise category -->
-            <div class="setup-card">
-              <label class="field-label">EXPERTISE CATEGORY</label>
-              <select id="category-select" class="modern-select">
-                <option value="" disabled selected>Select Expertise Category</option>
-                <option value="Technical">Technical (Engineering, Data, Product)</option>
-                <option value="Non-Technical">Non-Technical (HR, Sales, Finance)</option>
-              </select>
-            </div>
-
-            <!-- specific role -->
-            <div class="setup-card">
-              <label class="field-label">TARGET SPECIALTY / ROLE</label>
-              <select id="role-select" class="modern-select">
-                <!-- populated by JS -->
-              </select>
-            </div>
-
-            <!-- resume upload -->
-            <div class="setup-card wide">
-              <label class="field-label">UPLOAD RESUME (PDF/DOCX)</label>
-              <div class="upload-zone" id="resume-dropzone">
-                <i class="fas fa-file-upload"></i>
-                <div class="info">
-                  <span class="main-text">Click to upload or drag and drop</span>
-                  <span class="sub-text">Maximize interview accuracy with resume-tailored questions</span>
-                </div>
-                <input type="file" id="resume-upload" hidden accept=".pdf,.doc,.docx">
-                <div id="file-info" class="file-summary" style="display: none;">
-                  <i class="fas fa-check-circle"></i> <span id="filename-text"></span>
+          <!-- Scrollable Setup Body (Functional Form) -->
+          <div class="setup-body-scroll">
+            <div class="setup-grid-v2">
+              <div class="setup-card">
+                <label class="field-label">EXPERTISE CATEGORY</label>
+                <select id="category-select" class="modern-select">
+                  <option value="" disabled selected>Select Category</option>
+                  <option value="Technical">Technical (Engineering, Data, Product)</option>
+                  <option value="Non-Technical">Non-Technical (HR, Sales, Finance)</option>
+                </select>
+              </div>
+              <div class="setup-card">
+                <label class="field-label">TARGET SPECIALTY / ROLE</label>
+                <select id="role-select" class="modern-select">
+                  <!-- populated by JS -->
+                </select>
+              </div>
+              <div class="setup-card wide">
+                <label class="field-label">UPLOAD RESUME (PDF/DOCX)</label>
+                <div class="upload-zone" id="resume-dropzone">
+                  <i class="fas fa-file-upload"></i>
+                  <div class="info">
+                    <span class="main-text">Click to upload or drag & drop</span>
+                    <span class="sub-text">Maximize interview accuracy with resume-tailored context.</span>
+                  </div>
+                  <input type="file" id="resume-upload" hidden accept=".pdf,.doc,.docx">
+                  <div id="file-info" class="file-summary" style="display: none;">
+                    <i class="fas fa-check-circle"></i> <span id="filename-text"></span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <!-- custom role -->
-            <div class="setup-card wide" id="custom-role-container" style="display: none;">
-              <label class="field-label">DEFINE CUSTOM ROLE</label>
-              <input type="text" id="custom-role-input" class="modern-input" placeholder="e.g. Senior Site Reliability Manager">
+              <div class="setup-card wide" id="custom-role-container" style="display: none;">
+                <label class="field-label">DEFINE CUSTOM ROLE</label>
+                <input type="text" id="custom-role-input" class="modern-input" placeholder="e.g. Senior Site Reliability Manager">
+              </div>
             </div>
           </div>
 
-          <div>
-            <button class="btn-primary" id="start-btn" style="width: 100%; padding: 1.5rem; font-size: 1.25rem">
-               Launch Interview <i class="fas fa-rocket" style="margin-left: 10px;"></i>
+          <div class="setup-footer">
+            <button class="btn-primary" id="start-btn" style="width: 100%; max-width: 900px; padding: 1.25rem;">
+               Launch Clinical Session <i class="fas fa-rocket" style="margin-left: 10px;"></i>
             </button>
-            <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 1.5rem; opacity: 0.7;">
-              <!-- <i class="fas fa-shield-halved"></i> Enterprise-grade session security active. -->
-            </p>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; opacity: 0.6;">Verified proctoring & Perspective Flip architecture active.</p>
           </div>
+
         </div>
       </div>
 
