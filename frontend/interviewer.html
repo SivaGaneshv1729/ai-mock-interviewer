@@ -7,9 +7,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="interviewer.css">
 </head>
+<body>
   <div class="grid-bg"></div>
   <div class="app-container">
     <!-- Header -->
@@ -20,13 +21,13 @@
           <a href="#" class="nav-item">Dashboard</a>
           <a href="#" class="nav-item active" id="nav-practice">Practice</a>
           <a href="#" class="nav-item" id="nav-history">History</a>
-          <a href="#" class="nav-item">Support</a>
+          <!-- <a href="#" class="nav-item">Support</a> -->
         </nav>
       </div>
-      <div class="header-right">
+      <!-- <div class="header-right">
         <button class="icon-btn"><i class="far fa-bell"></i></button>
         <button class="icon-btn"><i class="fas fa-cog"></i></button>
-      </div>
+      </div> -->
     </header>
 
     <main class="main-content">
@@ -55,7 +56,7 @@
         </div>
       </div>
 
-      <div class="screen visible" id="screen-welcome">
+      <div class="screen active" id="screen-welcome">
         <div class="welcome-box">
           <div class="setup-header">
             <h2 style="font-size: 2.5rem; letter-spacing: -0.03em;">Configure Practice Session</h2>
@@ -143,6 +144,18 @@
                     <p id="current-question-text">Initializing clinical session...</p>
                  </div>
               </div>
+
+              <!-- Floating Glass Control Dock (Bottom Center) -->
+              <div class="controls-dock">
+                 <button class="dock-btn mic" id="mic-btn" title="Microphone"><i class="fas fa-microphone"></i></button>
+                 <button class="dock-btn" id="cam-toggle" title="Camera"><i class="fas fa-video"></i></button>
+                 <div class="dock-divider"></div>
+                 <button class="dock-btn" id="repeat-btn" title="Repeat Question"><i class="fas fa-redo"></i></button>
+                 <button class="dock-btn" id="clarify-btn" title="Clarify Question"><i class="fas fa-question-circle"></i></button>
+                 <button class="dock-btn highlight" id="chat-toggle-btn" title="Toggle Chat Transcript"><i class="fas fa-comment-alt"></i></button>
+                 <div class="dock-divider"></div>
+                 <button class="dock-btn end" id="sidebar-end">End Interview</button>
+              </div>
            </div>
 
            <!-- Stealth Sidebar (Right) -->
@@ -159,18 +172,6 @@
                   </div>
                </div>
             </aside>
-        </div>
-
-        <!-- Floating Glass Control Dock (Bottom Center) -->
-        <div class="controls-dock">
-           <button class="dock-btn mic" id="mic-btn" title="Microphone"><i class="fas fa-microphone"></i></button>
-           <button class="dock-btn" id="cam-toggle" title="Camera"><i class="fas fa-video"></i></button>
-           <div class="dock-divider"></div>
-           <button class="dock-btn" id="repeat-btn" title="Repeat Question"><i class="fas fa-redo"></i></button>
-           <button class="dock-btn" id="clarify-btn" title="Clarify Question"><i class="fas fa-question-circle"></i></button>
-           <button class="dock-btn highlight" id="chat-toggle-btn" title="Toggle Chat Transcript"><i class="fas fa-comment-alt"></i></button>
-           <div class="dock-divider"></div>
-           <button class="dock-btn end" id="sidebar-end">End Interview</button>
         </div>
       </div>
 
@@ -294,6 +295,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.1/markdown-it.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
   <script src="camera.js"></script>
-  <script src="interviewer.js"></script>
+  <script src="interviewer.js?v=2.2.1"></script>
 </body>
 </html>

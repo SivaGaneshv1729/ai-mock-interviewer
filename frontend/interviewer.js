@@ -39,9 +39,9 @@ async function apiFetch(endpoint, options = {}) {
 
 // ── UI Logic ──
 function showScreen(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = $(`screen-${screenId}`);
-  if (target) target.classList.add('visible');
+  if (target) target.classList.add('active');
   
   if (screenId === 'history') loadHistory();
 }
@@ -345,7 +345,8 @@ async function loadAnalyticsDashboard() {
     const logs = data.history || [];
     
     if (logs.length === 0) {
-      document.getElementById('analytics-insights').innerHTML = '<div class="empty-state">No interview data yet. Complete a practice session to see analytics.</div>';
+      const g = document.querySelector('.analytics-grid');
+      if (g) g.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">No interview data yet. Complete a practice session to see analytics.</div>';
       setLoading(false);
       return;
     }
