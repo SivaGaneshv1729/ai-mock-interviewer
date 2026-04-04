@@ -3,12 +3,13 @@
 A production-ready, asynchronous AI interviewer that simulates real-world job interviews using **Groq** and **Google Gemini**.
 
 ## ✨ Key Features
-- **🚀 Ultra-Fast Responses**: Powered by Groq's Llama 3.3 and raw asynchronous HTTP calls (no-SDK hanging).
-- **📝 Resume-Aware**: Upload PDF or DOCX resumes for tailored behavioral questions.
-- **💼 HR & Technical Modes**: Switch between deep technical dives and behavioral HR rounds.
-- **🏛️ Persistent Sessions**: All interviews are stored in an asynchronous SQLite database.
-- **🎨 Glassmorphic UI**: A modern, responsive interface with interactive command buttons like "Clarify" and "Repeat".
-- **🔉 Text-to-Speech**: Integrated speech synthesis for a natural interview experience.
+- **🚀 Ultra-Fast Responses**: Powered by Groq/Gemini with rapid-fire asynchronous HTTP logic.
+- **📝 Resume-Aware Integration**: Targeted behavioral and technical questions based on uploaded PDF/DOCX.
+- **🛡️ Automated Proctoring**: Strict "Soft Alert" watchdog keeps candidates focused (detects tab-switching, absence, etc.).
+- **📊 Executive Cockpit**: High-density 8-axis performance dashboard with a single-page "Zero-Scroll" telemetry layout.
+- **🖇️ Satin Scroll Architecture**: Internal vertically scrollable practice setup that keeps "Mission Control" buttons pinned.
+- **🎨 Elite Glassmorphism**: Premium modern UI with interactive AI command buttons (Clarify/Repeat).
+- **🔉 Real-Time TTS**: Professional AI speech synthesis for immersive session simulation.
 
 ## 🛠️ Technical Stack
 - **Backend**: FastAPI, SQLAlchemy, aiohttp, PyPDF2.
