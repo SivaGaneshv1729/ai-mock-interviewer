@@ -7,6 +7,9 @@ A production-ready, asynchronous AI interviewer that simulates real-world job in
 - **📝 Resume-Aware Integration**: Targeted behavioral and technical questions based on uploaded PDF/DOCX.
 - **🛡️ Automated Proctoring**: Strict "Soft Alert" watchdog keeps candidates focused (detects tab-switching, absence, etc.).
 - **📊 Executive Cockpit**: High-density 8-axis performance dashboard with a single-page "Zero-Scroll" telemetry layout.
+- **🤖 Offline Support**: Native Ollama/Llama 3 integration for 100% locally hosted, high-security sessions.
+- **🛠️ Indestructible Parser**: Robust multi-stage Regex fallback that extracts metrics even from broken LLM JSON.
+- **✨ Zen-Pacing Logic**: Optimized prompt architecture enforcing a rapid-fire, 15-word maximum for AI questions.
 - **🖇️ Satin Scroll Architecture**: Internal vertically scrollable practice setup that keeps "Mission Control" buttons pinned.
 - **🎨 Elite Glassmorphism**: Premium modern UI with interactive AI command buttons (Clarify/Repeat).
 - **🔉 Real-Time TTS**: Professional AI speech synthesis for immersive session simulation.
